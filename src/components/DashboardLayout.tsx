@@ -6,7 +6,7 @@ import {
 import { NavLink } from "@/components/NavLink";
 import {
   LayoutDashboard, GraduationCap, Landmark, ShoppingBag, CalendarDays,
-  BadgeCheck, Users, Bot, MessageSquare, Bell, FileText, Trophy, LogOut,
+  BadgeCheck, Users, Bot, MessageSquare, Bell, FileText, Trophy, LogOut, Shield,
 } from "lucide-react";
 
 const menuItems = [
