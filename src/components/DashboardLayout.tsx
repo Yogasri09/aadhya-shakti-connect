@@ -6,7 +6,7 @@ import {
 import { NavLink } from "@/components/NavLink";
 import {
   LayoutDashboard, GraduationCap, Landmark, ShoppingBag, CalendarDays,
-  BadgeCheck, Users, Bot, MessageSquare, Bell, FileText, Trophy, LogOut,
+  BadgeCheck, Users, Bot, MessageSquare, Bell, FileText, Trophy, LogOut, Shield,
 } from "lucide-react";
 
 const menuItems = [
@@ -22,6 +22,7 @@ const menuItems = [
   { title: "Notifications", url: "/dashboard/notifications", icon: Bell },
   { title: "Documents", url: "/dashboard/documents", icon: FileText },
   { title: "Achievements", url: "/dashboard/achievements", icon: Trophy },
+  { title: "Admin Panel", url: "/dashboard/admin", icon: Shield },
 ];
 
 function AppSidebar() {

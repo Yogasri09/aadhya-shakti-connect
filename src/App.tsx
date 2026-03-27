@@ -20,6 +20,7 @@ import CommunityPage from "./pages/dashboard/CommunityPage";
 import NotificationsPage from "./pages/dashboard/NotificationsPage";
 import DocumentsPage from "./pages/dashboard/DocumentsPage";
 import AchievementsPage from "./pages/dashboard/AchievementsPage";
+import AdminPage from "./pages/dashboard/AdminPage";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="documents" element={<DocumentsPage />} />
             <Route path="achievements" element={<AchievementsPage />} />
+            <Route path="admin" element={<AdminPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

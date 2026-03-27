@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { GraduationCap, Landmark, ShoppingBag, TrendingUp, Bot, CalendarDays } from "lucide-react";
 import { Link } from "react-router-dom";
+import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const anim = (i: number) => ({
   initial: { opacity: 0, y: 16, filter: "blur(4px)" } as const,
@@ -21,6 +22,34 @@ const recommended = [
   { title: "Beautician Training", desc: "Free 3-month certified course by NSDC", link: "/dashboard/courses" },
   { title: "MUDRA Loan", desc: "Get up to ₹10 lakh for your business", link: "/dashboard/schemes" },
   { title: "Women Expo 2026", desc: "Showcase your products – March 28, Delhi", link: "/dashboard/events" },
+];
+
+const interestData = [
+  { name: "Tailoring", value: 30 },
+  { name: "Beauty", value: 25 },
+  { name: "Food", value: 20 },
+  { name: "Digital", value: 15 },
+  { name: "Other", value: 10 },
+];
+const PIE_COLORS = ["hsl(24,85%,48%)", "hsl(158,45%,42%)", "hsl(35,60%,52%)", "hsl(200,60%,50%)", "hsl(280,40%,55%)"];
+
+const weeklyData = [
+  { day: "Mon", hours: 2 },
+  { day: "Tue", hours: 3.5 },
+  { day: "Wed", hours: 1 },
+  { day: "Thu", hours: 4 },
+  { day: "Fri", hours: 2.5 },
+  { day: "Sat", hours: 5 },
+  { day: "Sun", hours: 1.5 },
+];
+
+const jobCategories = [
+  { category: "Tailoring", openings: 45 },
+  { category: "Beauty", openings: 38 },
+  { category: "Teaching", openings: 32 },
+  { category: "Digital Mktg", openings: 28 },
+  { category: "Data Entry", openings: 22 },
+  { category: "Healthcare", openings: 18 },
 ];
 
 export default function DashboardHome() {
@@ -52,8 +81,62 @@ export default function DashboardHome() {
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      {/* Charts Row */}
+      <div className="grid lg:grid-cols-3 gap-6">
         <motion.div {...anim(4)}>
+          <Card className="h-full">
+            <CardHeader><CardTitle className="text-lg font-sans">User Interests</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie data={interestData} cx="50%" cy="50%" innerRadius={40} outerRadius={75} paddingAngle={3} dataKey="value">
+                    {interestData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div {...anim(5)}>
+          <Card className="h-full">
+            <CardHeader><CardTitle className="text-lg font-sans">Weekly Activity</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={weeklyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(30,15%,88%)" />
+                  <XAxis dataKey="day" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="hours" stroke="hsl(24,85%,48%)" strokeWidth={2} dot={{ r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div {...anim(6)}>
+          <Card className="h-full">
+            <CardHeader><CardTitle className="text-lg font-sans">Job Categories</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={jobCategories}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(30,15%,88%)" />
+                  <XAxis dataKey="category" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Bar dataKey="openings" fill="hsl(158,45%,42%)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-6">
+        <motion.div {...anim(7)}>
           <Card>
             <CardHeader><CardTitle className="text-lg font-sans">Skill Progress</CardTitle></CardHeader>
             <CardContent className="space-y-4">
@@ -67,7 +150,7 @@ export default function DashboardHome() {
           </Card>
         </motion.div>
 
-        <motion.div {...anim(5)}>
+        <motion.div {...anim(8)}>
           <Card>
             <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><Bot className="h-5 w-5 text-primary" /> AI Recommendations</CardTitle></CardHeader>
             <CardContent className="space-y-3">
@@ -82,7 +165,7 @@ export default function DashboardHome() {
         </motion.div>
       </div>
 
-      <motion.div {...anim(6)}>
+      <motion.div {...anim(9)}>
         <Card>
           <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><CalendarDays className="h-5 w-5 text-warm" /> Upcoming Events</CardTitle></CardHeader>
           <CardContent>
