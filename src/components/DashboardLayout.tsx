@@ -22,6 +22,7 @@ const menuItems = [
   { title: "Notifications", url: "/dashboard/notifications", icon: Bell },
   { title: "Documents", url: "/dashboard/documents", icon: FileText },
   { title: "Achievements", url: "/dashboard/achievements", icon: Trophy },
+  { title: "Admin Panel", url: "/dashboard/admin", icon: Shield },
 ];
 
 function AppSidebar() {
