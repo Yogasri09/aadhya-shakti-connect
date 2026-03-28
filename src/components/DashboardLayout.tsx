@@ -1,4 +1,4 @@
-import { Link, useLocation, Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger, useSidebar,
@@ -8,6 +8,7 @@ import {
   LayoutDashboard, GraduationCap, Landmark, ShoppingBag, CalendarDays,
   BadgeCheck, Users, Bot, MessageSquare, Bell, FileText, Trophy, LogOut, Shield,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -22,12 +23,12 @@ const menuItems = [
   { title: "Notifications", url: "/dashboard/notifications", icon: Bell },
   { title: "Documents", url: "/dashboard/documents", icon: FileText },
   { title: "Achievements", url: "/dashboard/achievements", icon: Trophy },
-  { title: "Admin Panel", url: "/dashboard/admin", icon: Shield },
 ];
 
 function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
+  const { hasRole } = useAuth();
 
   return (
     <Sidebar collapsible="icon">
@@ -54,6 +55,16 @@ function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              {hasRole("admin") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to="/dashboard/admin" className="hover:bg-muted/50" activeClassName="bg-primary/10 text-primary font-medium">
+                      <Shield className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Admin Panel</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -62,10 +73,7 @@ function AppSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link to="/" className="text-muted-foreground hover:text-foreground">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {!collapsed && <span>Log Out</span>}
-                </Link>
+                <LogoutButton collapsed={collapsed} />
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -75,7 +83,22 @@ function AppSidebar() {
   );
 }
 
+function LogoutButton({ collapsed }: { collapsed: boolean }) {
+  const { signOut } = useAuth();
+  return (
+    <button onClick={signOut} className="flex items-center w-full text-muted-foreground hover:text-foreground">
+      <LogOut className="mr-2 h-4 w-4" />
+      {!collapsed && <span>Log Out</span>}
+    </button>
+  );
+}
+
 export default function DashboardLayout() {
+  const { profile } = useAuth();
+  const initials = profile?.full_name
+    ? profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+    : "U";
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -89,7 +112,7 @@ export default function DashboardLayout() {
                 <Bell className="h-5 w-5 text-muted-foreground" />
                 <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">3</span>
               </Link>
-              <div className="h-8 w-8 rounded-full hero-gradient flex items-center justify-center text-primary-foreground text-xs font-bold">PS</div>
+              <div className="h-8 w-8 rounded-full hero-gradient flex items-center justify-center text-primary-foreground text-xs font-bold">{initials}</div>
             </div>
           </header>
           <main className="flex-1 p-6 overflow-auto">

@@ -5,15 +5,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Signup() {
   const [form, setForm] = useState({ name: "", email: "", password: "", location: "", interest: "", role: "user" });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const set = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.password) { toast.error("Please fill in required fields"); return; }
+    if (form.password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+      options: {
+        data: {
+          full_name: form.name,
+          location: form.location,
+          interest: form.interest,
+          role: form.role,
+        },
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    setLoading(false);
+    if (error) { toast.error(error.message); return; }
     toast.success("Account created! Welcome to Aadhya.");
     navigate("/dashboard");
   };
@@ -50,12 +69,12 @@ export default function Signup() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="seller">Seller</SelectItem>
                   <SelectItem value="mentor">Mentor</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <Button type="submit" className="w-full">Create Account</Button>
+            <Button type="submit" className="w-full" disabled={loading}>{loading ? "Creating account..." : "Create Account"}</Button>
           </form>
           <p className="text-sm text-muted-foreground mt-4 text-center">
             Already have an account? <Link to="/login" className="text-primary font-medium hover:underline">Log In</Link>
