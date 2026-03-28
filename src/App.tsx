@@ -3,6 +3,8 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -30,27 +32,29 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<DashboardHome />} />
-            <Route path="courses" element={<CoursesPage />} />
-            <Route path="schemes" element={<SchemesPage />} />
-            <Route path="marketplace" element={<MarketplacePage />} />
-            <Route path="events" element={<EventsPage />} />
-            <Route path="certification" element={<CertificationPage />} />
-            <Route path="mentorship" element={<MentorshipPage />} />
-            <Route path="ai-assistant" element={<AIAssistantPage />} />
-            <Route path="community" element={<CommunityPage />} />
-            <Route path="notifications" element={<NotificationsPage />} />
-            <Route path="documents" element={<DocumentsPage />} />
-            <Route path="achievements" element={<AchievementsPage />} />
-            <Route path="admin" element={<AdminPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+              <Route index element={<DashboardHome />} />
+              <Route path="courses" element={<CoursesPage />} />
+              <Route path="schemes" element={<SchemesPage />} />
+              <Route path="marketplace" element={<MarketplacePage />} />
+              <Route path="events" element={<EventsPage />} />
+              <Route path="certification" element={<CertificationPage />} />
+              <Route path="mentorship" element={<MentorshipPage />} />
+              <Route path="ai-assistant" element={<AIAssistantPage />} />
+              <Route path="community" element={<CommunityPage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
+              <Route path="documents" element={<DocumentsPage />} />
+              <Route path="achievements" element={<AchievementsPage />} />
+              <Route path="admin" element={<ProtectedRoute requiredRole="admin"><AdminPage /></ProtectedRoute>} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
