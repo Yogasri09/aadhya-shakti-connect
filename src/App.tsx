@@ -23,6 +23,7 @@ import NotificationsPage from "./pages/dashboard/NotificationsPage";
 import DocumentsPage from "./pages/dashboard/DocumentsPage";
 import AchievementsPage from "./pages/dashboard/AchievementsPage";
 import AdminPage from "./pages/dashboard/AdminPage";
+import ProfilePage from "./pages/dashboard/ProfilePage";
 
 const queryClient = new QueryClient();
 
