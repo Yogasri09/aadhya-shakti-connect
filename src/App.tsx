@@ -23,6 +23,7 @@ import NotificationsPage from "./pages/dashboard/NotificationsPage";
 import DocumentsPage from "./pages/dashboard/DocumentsPage";
 import AchievementsPage from "./pages/dashboard/AchievementsPage";
 import AdminPage from "./pages/dashboard/AdminPage";
+import ProfilePage from "./pages/dashboard/ProfilePage";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="documents" element={<DocumentsPage />} />
               <Route path="achievements" element={<AchievementsPage />} />
+              <Route path="profile" element={<ProfilePage />} />
               <Route path="admin" element={<ProtectedRoute requiredRole="admin"><AdminPage /></ProtectedRoute>} />
             </Route>
             <Route path="*" element={<NotFound />} />
