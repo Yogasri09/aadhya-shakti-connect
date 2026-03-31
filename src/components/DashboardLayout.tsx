@@ -112,7 +112,7 @@ export default function DashboardLayout() {
                 <Bell className="h-5 w-5 text-muted-foreground" />
                 <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">3</span>
               </Link>
-              <div className="h-8 w-8 rounded-full hero-gradient flex items-center justify-center text-primary-foreground text-xs font-bold">{initials}</div>
+              <Link to="/dashboard/profile" className="h-8 w-8 rounded-full hero-gradient flex items-center justify-center text-primary-foreground text-xs font-bold hover:opacity-90 transition-opacity">{initials}</Link>
             </div>
           </header>
           <main className="flex-1 p-6 overflow-auto">
