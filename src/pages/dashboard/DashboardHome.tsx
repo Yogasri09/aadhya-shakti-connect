@@ -1,16 +1,32 @@
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import UserDashboard from "./dashboards/UserDashboard";
 import SellerDashboard from "./dashboards/SellerDashboard";
 import MentorDashboard from "./dashboards/MentorDashboard";
 import AdminDashboard from "./dashboards/AdminDashboard";
+import QuestionnaireModal from "@/components/QuestionnaireModal";
 
 export default function DashboardHome() {
   const { profile, roles } = useAuth();
   const firstName = profile?.full_name?.split(" ")[0] || "User";
+  const [questionnaireOpen, setQuestionnaireOpen] = useState(true);
 
-  // Show highest-priority role dashboard
-  if (roles.includes("admin")) return <AdminDashboard name={firstName} />;
-  if (roles.includes("mentor")) return <MentorDashboard name={firstName} />;
-  if (roles.includes("seller")) return <SellerDashboard name={firstName} />;
-  return <UserDashboard name={firstName} />;
+  const showQuestionnaire = profile?.first_login === true;
+
+  return (
+    <>
+      {showQuestionnaire && (
+        <QuestionnaireModal
+          open={questionnaireOpen}
+          onClose={() => setQuestionnaireOpen(false)}
+        />
+      )}
+
+      {/* Show highest-priority role dashboard */}
+      {roles.includes("admin") ? <AdminDashboard name={firstName} /> :
+       roles.includes("mentor") ? <MentorDashboard name={firstName} /> :
+       roles.includes("seller") ? <SellerDashboard name={firstName} /> :
+       <UserDashboard name={firstName} />}
+    </>
+  );
 }

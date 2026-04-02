@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import type { QuestionnaireAnswers } from "@/data/locationData";
 
 type AppRole = "user" | "seller" | "mentor" | "admin";
 
@@ -8,6 +9,9 @@ interface Profile {
   full_name: string | null;
   location: string | null;
   interest: string | null;
+  state: string | null;
+  city: string | null;
+  first_login: boolean;
 }
 
 interface AuthContextType {
@@ -15,9 +19,13 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   roles: AppRole[];
+  questionnaire: QuestionnaireAnswers | null;
   loading: boolean;
   hasRole: (role: AppRole) => boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+  completeQuestionnaire: (answers: QuestionnaireAnswers) => Promise<void>;
+  updateProfile: (data: Partial<Profile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,16 +35,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
+  const [questionnaire, setQuestionnaire] = useState<QuestionnaireAnswers | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserData = async (userId: string) => {
-    const [profileRes, rolesRes] = await Promise.all([
-      supabase.from("profiles").select("full_name, location, interest").eq("user_id", userId).single(),
+  const fetchUserData = useCallback(async (userId: string) => {
+    const [profileRes, rolesRes, questionnaireRes] = await Promise.all([
+      supabase.from("profiles").select("full_name, location, interest, state, city, first_login").eq("user_id", userId).single(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
+      supabase.from("questionnaire_responses").select("answers").eq("user_id", userId).single(),
     ]);
     if (profileRes.data) setProfile(profileRes.data);
     if (rolesRes.data) setRoles(rolesRes.data.map((r) => r.role));
-  };
+    if (questionnaireRes.data) setQuestionnaire(questionnaireRes.data.answers as unknown as QuestionnaireAnswers);
+  }, []);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -47,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setRoles([]);
+        setQuestionnaire(null);
       }
       setLoading(false);
     });
@@ -59,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchUserData]);
 
   const hasRole = (role: AppRole) => roles.includes(role);
 
@@ -69,10 +81,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setProfile(null);
     setRoles([]);
+    setQuestionnaire(null);
+  };
+
+  const refreshProfile = async () => {
+    if (user) await fetchUserData(user.id);
+  };
+
+  const completeQuestionnaire = async (answers: QuestionnaireAnswers) => {
+    if (!user) return;
+    // Upsert questionnaire
+    await supabase.from("questionnaire_responses").upsert({
+      user_id: user.id,
+      answers: answers as unknown as import("@/integrations/supabase/types").Json,
+    }, { onConflict: "user_id" });
+    // Mark first_login false
+    await supabase.from("profiles").update({ first_login: false }).eq("user_id", user.id);
+    // Add notification
+    await supabase.from("notifications").insert({
+      user_id: user.id,
+      title: "Profile Complete! 🎯",
+      description: "Your personalized dashboard is ready. Explore recommended courses, schemes, and mentors.",
+      type: "success",
+    });
+    setQuestionnaire(answers);
+    setProfile(prev => prev ? { ...prev, first_login: false } : prev);
+  };
+
+  const updateProfile = async (data: Partial<Profile>) => {
+    if (!user) return;
+    const updateData: Record<string, unknown> = {};
+    if (data.full_name !== undefined) updateData.full_name = data.full_name;
+    if (data.location !== undefined) updateData.location = data.location;
+    if (data.interest !== undefined) updateData.interest = data.interest;
+    if (data.state !== undefined) updateData.state = data.state;
+    if (data.city !== undefined) updateData.city = data.city;
+    await supabase.from("profiles").update(updateData).eq("user_id", user.id);
+    setProfile(prev => prev ? { ...prev, ...data } : prev);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, roles, loading, hasRole, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, roles, questionnaire, loading, hasRole, signOut, refreshProfile, completeQuestionnaire, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

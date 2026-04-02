@@ -8,7 +8,6 @@ export type Json =
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.4"
   }
@@ -21,6 +20,9 @@ export type Database = {
           id: string
           interest: string | null
           location: string | null
+          state: string | null
+          city: string | null
+          first_login: boolean
           updated_at: string
           user_id: string
         }
@@ -30,6 +32,9 @@ export type Database = {
           id?: string
           interest?: string | null
           location?: string | null
+          state?: string | null
+          city?: string | null
+          first_login?: boolean
           updated_at?: string
           user_id: string
         }
@@ -39,6 +44,9 @@ export type Database = {
           id?: string
           interest?: string | null
           location?: string | null
+          state?: string | null
+          city?: string | null
+          first_login?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -59,6 +67,93 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      questionnaire_responses: {
+        Row: {
+          id: string
+          user_id: string
+          answers: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          answers: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          answers?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      certificates: {
+        Row: {
+          id: string
+          user_id: string
+          certificate_id: string
+          holder_name: string | null
+          provider: string | null
+          status: string
+          verified_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          certificate_id: string
+          holder_name?: string | null
+          provider?: string | null
+          status?: string
+          verified_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          certificate_id?: string
+          holder_name?: string | null
+          provider?: string | null
+          status?: string
+          verified_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          description: string | null
+          type: string
+          read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          description?: string | null
+          type?: string
+          read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          description?: string | null
+          type?: string
+          read?: boolean
+          created_at?: string
         }
         Relationships: []
       }

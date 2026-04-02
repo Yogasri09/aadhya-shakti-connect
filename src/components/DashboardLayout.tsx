@@ -6,9 +6,10 @@ import {
 import { NavLink } from "@/components/NavLink";
 import {
   LayoutDashboard, GraduationCap, Landmark, ShoppingBag, CalendarDays,
-  BadgeCheck, Users, Bot, MessageSquare, Bell, FileText, Trophy, LogOut, Shield,
+  BadgeCheck, Users, Bot, MessageSquare, Bell, FileText, Trophy, LogOut, Shield, UserCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import AIChatWidget from "@/components/AIChatWidget";
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -119,6 +120,7 @@ export default function DashboardLayout() {
             <Outlet />
           </main>
         </div>
+        <AIChatWidget />
       </div>
     </SidebarProvider>
   );
