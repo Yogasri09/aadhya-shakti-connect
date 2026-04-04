@@ -46,9 +46,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ]);
 
     if (profileRes.data) {
-      // Check if questionnaire exists to determine first_login
       const hasQuestionnaire = !!questionnaireRes.data;
-      setProfile({ ...profileRes.data, first_login: !hasQuestionnaire });
+      const loc = profileRes.data.location || "";
+      const parts = loc.split(",").map(s => s.trim());
+      const city = parts.length > 1 ? parts[0] : null;
+      const state = parts.length > 1 ? parts[1] : parts[0] || null;
+      setProfile({ ...profileRes.data, state, city, first_login: !hasQuestionnaire });
     }
     if (rolesRes.data) setRoles(rolesRes.data.map((r) => r.role));
     if (questionnaireRes.data) setQuestionnaire(questionnaireRes.data.responses as unknown as QuestionnaireAnswers);
