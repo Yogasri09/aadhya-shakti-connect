@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, MessageSquare, Star, Clock, TrendingUp, MapPin, CheckCircle, XCircle, CalendarDays } from "lucide-react";
+import { Users, MessageSquare, Star, Clock, TrendingUp, MapPin, CalendarDays, Loader2 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
@@ -11,6 +11,8 @@ import {
 import { Link } from "react-router-dom";
 import { MOCK_MENTOR_REQUESTS } from "@/data/mockDatabase";
 import { getMentorExpertiseStats, getMenteeCategoryStats, getDemandByLocation } from "@/data/demandEngine";
+import { useAuth } from "@/contexts/AuthContext";
+import { useMentorStats } from "@/hooks/useDashboardStats";
 
 const anim = (i: number) => ({
   initial: { opacity: 0, y: 16, filter: "blur(4px)" } as const,
@@ -20,24 +22,30 @@ const anim = (i: number) => ({
 
 const PIE_COLORS = ["hsl(24,85%,48%)", "hsl(158,45%,42%)", "hsl(35,60%,52%)", "hsl(200,60%,50%)", "hsl(280,40%,55%)"];
 
-interface Props {
-  name: string;
-}
+interface Props { name: string; }
 
 export default function MentorDashboard({ name }: Props) {
+  const { user } = useAuth();
+  const stats = useMentorStats(user?.id);
+
   const pendingRequests = MOCK_MENTOR_REQUESTS.filter(r => r.status === "pending");
   const expertiseStats = getMentorExpertiseStats();
   const menteeCategoryStats = getMenteeCategoryStats().slice(0, 6);
-  const locationDemand = getDemandByLocation().slice(0, 6).map(d => ({
-    state: d.state,
-    demand: d.mentorshipDemand,
-  }));
+  const locationDemand = getDemandByLocation().slice(0, 6).map(d => ({ state: d.state, demand: d.mentorshipDemand }));
+
+  if (stats.loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const widgets = [
-    { icon: Users, title: "Active Mentees", value: "8", sub: "2 new this week", color: "text-primary" },
-    { icon: MessageSquare, title: "Requests Received", value: pendingRequests.length.toString(), sub: "Pending review", color: "text-warm" },
-    { icon: Star, title: "Sessions Completed", value: "34", sub: "This month", color: "text-accent" },
-    { icon: Clock, title: "Hours Mentored", value: "62", sub: "This quarter", color: "text-success" },
+    { icon: Users, title: "Active Mentees", value: stats.totalMentees.toString(), sub: "Accepted requests", color: "text-primary" },
+    { icon: MessageSquare, title: "Pending Requests", value: stats.pendingRequests.toString(), sub: "Awaiting review", color: "text-warm" },
+    { icon: Star, title: "Sessions Completed", value: stats.completedSessions.toString(), sub: "Total sessions", color: "text-accent" },
+    { icon: Clock, title: "Hours Mentored", value: stats.totalHours.toString(), sub: "Total hours", color: "text-success" },
   ];
 
   const mentees = [
@@ -54,7 +62,6 @@ export default function MentorDashboard({ name }: Props) {
         <p className="text-muted-foreground">Here's an overview of your mentorship activity.</p>
       </div>
 
-      {/* Stats */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {widgets.map((w, i) => (
           <motion.div key={w.title} {...anim(i)}>
@@ -78,7 +85,6 @@ export default function MentorDashboard({ name }: Props) {
 
       {/* Charts Row */}
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Pie Chart → Expertise Distribution */}
         <motion.div {...anim(4)}>
           <Card className="h-full">
             <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><Star className="h-5 w-5 text-primary" /> Expertise Distribution</CardTitle></CardHeader>
@@ -96,7 +102,6 @@ export default function MentorDashboard({ name }: Props) {
           </Card>
         </motion.div>
 
-        {/* Bar Chart → Mentee Categories */}
         <motion.div {...anim(5)}>
           <Card className="h-full">
             <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><Users className="h-5 w-5 text-accent" /> Mentee Interests</CardTitle></CardHeader>
@@ -115,9 +120,7 @@ export default function MentorDashboard({ name }: Props) {
         </motion.div>
       </div>
 
-      {/* Demand Graph + Mentee Progress */}
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Location Demand for Mentoring */}
         <motion.div {...anim(6)}>
           <Card className="h-full">
             <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><MapPin className="h-5 w-5 text-primary" /> Mentorship Demand by Location</CardTitle></CardHeader>
@@ -135,7 +138,6 @@ export default function MentorDashboard({ name }: Props) {
           </Card>
         </motion.div>
 
-        {/* Mentee Progress */}
         <motion.div {...anim(7)}>
           <Card className="h-full">
             <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><TrendingUp className="h-5 w-5 text-accent" /> Mentee Progress</CardTitle></CardHeader>
@@ -154,7 +156,6 @@ export default function MentorDashboard({ name }: Props) {
         </motion.div>
       </div>
 
-      {/* Pending Requests Preview */}
       <motion.div {...anim(8)}>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -182,7 +183,6 @@ export default function MentorDashboard({ name }: Props) {
         </Card>
       </motion.div>
 
-      {/* Suggested Courses */}
       <motion.div {...anim(9)}>
         <Card>
           <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><CalendarDays className="h-5 w-5 text-warm" /> Suggested Courses for Mentees</CardTitle></CardHeader>

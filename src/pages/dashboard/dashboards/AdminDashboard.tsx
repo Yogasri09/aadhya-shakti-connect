@@ -5,19 +5,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Users, ShoppingBag, GraduationCap, Shield, TrendingUp, MapPin,
-  Package, Landmark, UserCheck, BookOpen,
+  Package, Landmark, UserCheck, BookOpen, Loader2,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, LineChart, Line,
 } from "recharts";
-import { getStats } from "@/data/mockDatabase";
 import { GROWTH_DATA } from "@/data/mockDatabase";
 import {
   getDemandByLocation, getLocationHeatmapData, getTrendingSkills,
   getSkillDemandForState, getMostSearchedCourses,
 } from "@/data/demandEngine";
 import { INDIAN_STATES } from "@/data/locationData";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 
 const anim = (i: number) => ({
   initial: { opacity: 0, y: 16, filter: "blur(4px)" } as const,
@@ -28,36 +28,40 @@ const anim = (i: number) => ({
 const PIE_COLORS = ["hsl(24,85%,48%)", "hsl(158,45%,42%)", "hsl(35,60%,52%)", "hsl(200,60%,50%)", "hsl(280,40%,55%)", "hsl(0,72%,51%)"];
 const BAR_COLORS = ["hsl(24,85%,48%)", "hsl(158,45%,42%)", "hsl(35,60%,52%)"];
 
-interface Props {
-  name: string;
-}
+interface Props { name: string; }
 
 export default function AdminDashboard({ name }: Props) {
-  const stats = getStats();
+  const stats = useDashboardStats();
   const [selectedState, setSelectedState] = useState("Tamil Nadu");
 
-  // Widget data
+  if (stats.loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   const widgets = [
-    { icon: Users, title: "Total Users", value: stats.totalUsers.toLocaleString(), sub: "+12 this week", color: "text-primary" },
-    { icon: ShoppingBag, title: "Total Sellers", value: stats.totalSellers.toLocaleString(), sub: `${stats.pendingSellers} pending`, color: "text-warm" },
-    { icon: UserCheck, title: "Total Mentors", value: stats.totalMentors.toLocaleString(), sub: "2 new this month", color: "text-accent" },
-    { icon: Package, title: "Total Products", value: stats.totalProducts.toLocaleString(), sub: "3 pending review", color: "text-success" },
-    { icon: BookOpen, title: "Total Courses", value: stats.totalCourses.toLocaleString(), sub: "5 free courses", color: "text-primary" },
-    { icon: Landmark, title: "Total Schemes", value: stats.totalSchemes.toLocaleString(), sub: "All active", color: "text-warm" },
+    { icon: Users, title: "Total Users", value: stats.totalUsers.toLocaleString(), sub: "All registered users", color: "text-primary" },
+    { icon: ShoppingBag, title: "Total Sellers", value: stats.totalSellers.toLocaleString(), sub: "Active sellers", color: "text-warm" },
+    { icon: UserCheck, title: "Total Mentors", value: stats.totalMentors.toLocaleString(), sub: "Verified mentors", color: "text-accent" },
+    { icon: Package, title: "Total Products", value: stats.totalProducts.toLocaleString(), sub: "Listed products", color: "text-success" },
+    { icon: BookOpen, title: "Total Courses", value: stats.totalCourses.toLocaleString(), sub: "Available courses", color: "text-primary" },
+    { icon: Landmark, title: "Total Schemes", value: stats.totalSchemes.toLocaleString(), sub: "Active schemes", color: "text-warm" },
   ];
 
-  // Chart data
   const roleData = [
-    { name: "Users", count: stats.totalUsers - stats.totalSellers - stats.totalMentors - 1 },
+    { name: "Users", count: stats.totalUsers - stats.totalSellers - stats.totalMentors - stats.totalAdmins },
     { name: "Sellers", count: stats.totalSellers },
     { name: "Mentors", count: stats.totalMentors },
   ];
 
   const platformDistribution = [
-    { name: "Courses", value: stats.totalCourses },
-    { name: "Products", value: stats.totalProducts },
-    { name: "Schemes", value: stats.totalSchemes },
-    { name: "Mentors", value: stats.totalMentors },
+    { name: "Courses", value: stats.totalCourses || 1 },
+    { name: "Products", value: stats.totalProducts || 1 },
+    { name: "Schemes", value: stats.totalSchemes || 1 },
+    { name: "Mentors", value: stats.totalMentors || 1 },
   ];
 
   const heatmap = getLocationHeatmapData().slice(0, 10);
@@ -73,7 +77,6 @@ export default function AdminDashboard({ name }: Props) {
         <p className="text-muted-foreground">Welcome, {name}. Here's the platform overview.</p>
       </div>
 
-      {/* ── 6 Stat Widgets ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {widgets.map((w, i) => (
           <motion.div key={w.title} {...anim(i)}>
@@ -91,7 +94,6 @@ export default function AdminDashboard({ name }: Props) {
         ))}
       </div>
 
-      {/* ── Tabs ── */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -99,10 +101,8 @@ export default function AdminDashboard({ name }: Props) {
           <TabsTrigger value="growth">Growth & Trends</TabsTrigger>
         </TabsList>
 
-        {/* ── Tab: Overview ── */}
         <TabsContent value="overview" className="space-y-6">
           <div className="grid lg:grid-cols-2 gap-6">
-            {/* Bar Chart → Users by Role */}
             <motion.div {...anim(6)}>
               <Card className="h-full">
                 <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> Users by Role</CardTitle></CardHeader>
@@ -122,7 +122,6 @@ export default function AdminDashboard({ name }: Props) {
               </Card>
             </motion.div>
 
-            {/* Pie Chart → Platform Distribution */}
             <motion.div {...anim(7)}>
               <Card className="h-full">
                 <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><Shield className="h-5 w-5 text-accent" /> Platform Distribution</CardTitle></CardHeader>
@@ -141,7 +140,6 @@ export default function AdminDashboard({ name }: Props) {
             </motion.div>
           </div>
 
-          {/* Line Chart → Growth Over Time */}
           <motion.div {...anim(8)}>
             <Card>
               <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><TrendingUp className="h-5 w-5 text-primary" /> Growth Over Time</CardTitle></CardHeader>
@@ -164,14 +162,10 @@ export default function AdminDashboard({ name }: Props) {
           </motion.div>
         </TabsContent>
 
-        {/* ── Tab: Location Analytics ── */}
         <TabsContent value="location" className="space-y-6">
-          {/* Location Demand Heatmap Bar */}
           <motion.div {...anim(0)}>
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-sans flex items-center gap-2"><MapPin className="h-5 w-5 text-primary" /> Location-Based Demand</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><MapPin className="h-5 w-5 text-primary" /> Location-Based Demand</CardTitle></CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={350}>
                   <BarChart data={heatmap} layout="vertical">
@@ -188,7 +182,6 @@ export default function AdminDashboard({ name }: Props) {
             </Card>
           </motion.div>
 
-          {/* State-specific drill-down */}
           <div className="grid lg:grid-cols-2 gap-6">
             <motion.div {...anim(1)}>
               <Card className="h-full">
@@ -198,11 +191,7 @@ export default function AdminDashboard({ name }: Props) {
                     <Select value={selectedState} onValueChange={setSelectedState}>
                       <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
                       <SelectContent className="max-h-60">
-                        {INDIAN_STATES.filter(s => [
-                          "Tamil Nadu", "Maharashtra", "Rajasthan", "Gujarat", "Kerala",
-                          "Karnataka", "Uttar Pradesh", "West Bengal", "Delhi", "Bihar",
-                          "Telangana", "Andhra Pradesh", "Madhya Pradesh", "Punjab", "Haryana", "Odisha"
-                        ].includes(s)).map(s => (
+                        {INDIAN_STATES.filter(s => ["Tamil Nadu","Maharashtra","Rajasthan","Gujarat","Kerala","Karnataka","Uttar Pradesh","West Bengal","Delhi","Bihar","Telangana","Andhra Pradesh","Madhya Pradesh","Punjab","Haryana","Odisha"].includes(s)).map(s => (
                           <SelectItem key={s} value={s}>{s}</SelectItem>
                         ))}
                       </SelectContent>
@@ -223,7 +212,6 @@ export default function AdminDashboard({ name }: Props) {
               </Card>
             </motion.div>
 
-            {/* Location Demand Insights Cards */}
             <motion.div {...anim(2)}>
               <Card className="h-full">
                 <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><MapPin className="h-5 w-5 text-accent" /> Demand Insights</CardTitle></CardHeader>
@@ -237,12 +225,8 @@ export default function AdminDashboard({ name }: Props) {
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent">Product: {d.productDemand}</span>
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Top skills: {d.topSkills.join(", ")}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Trending: {d.topBusinessTypes.slice(0, 2).join(", ")}
-                      </p>
+                      <p className="text-xs text-muted-foreground">Top skills: {d.topSkills.join(", ")}</p>
+                      <p className="text-xs text-muted-foreground">Trending: {d.topBusinessTypes.slice(0, 2).join(", ")}</p>
                     </div>
                   ))}
                 </CardContent>
@@ -251,10 +235,8 @@ export default function AdminDashboard({ name }: Props) {
           </div>
         </TabsContent>
 
-        {/* ── Tab: Growth & Trends ── */}
         <TabsContent value="growth" className="space-y-6">
           <div className="grid lg:grid-cols-2 gap-6">
-            {/* Trending Skills */}
             <motion.div {...anim(0)}>
               <Card className="h-full">
                 <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><TrendingUp className="h-5 w-5 text-primary" /> Trending Skills</CardTitle></CardHeader>
@@ -281,7 +263,6 @@ export default function AdminDashboard({ name }: Props) {
               </Card>
             </motion.div>
 
-            {/* Most Searched Courses */}
             <motion.div {...anim(1)}>
               <Card className="h-full">
                 <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><GraduationCap className="h-5 w-5 text-warm" /> Most Searched Courses</CardTitle></CardHeader>
