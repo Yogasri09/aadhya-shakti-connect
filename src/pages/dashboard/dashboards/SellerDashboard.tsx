@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, IndianRupee, Package, Star, TrendingUp, MapPin, Plus, Eye } from "lucide-react";
+import { ShoppingBag, IndianRupee, Package, Star, TrendingUp, MapPin, Plus, Eye, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -9,6 +9,8 @@ import {
 } from "recharts";
 import { getProductCategoryStats, getDemandByLocation, getSellerDemandTrend } from "@/data/demandEngine";
 import { suggestBusinessIdeas } from "@/data/aiEngine";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSellerStats } from "@/hooks/useDashboardStats";
 
 const anim = (i: number) => ({
   initial: { opacity: 0, y: 16, filter: "blur(4px)" } as const,
@@ -18,24 +20,30 @@ const anim = (i: number) => ({
 
 const PIE_COLORS = ["hsl(24,85%,48%)", "hsl(158,45%,42%)", "hsl(35,60%,52%)", "hsl(200,60%,50%)", "hsl(280,40%,55%)", "hsl(340,50%,50%)"];
 
-interface Props {
-  name: string;
-}
+interface Props { name: string; }
 
 export default function SellerDashboard({ name }: Props) {
+  const { user } = useAuth();
+  const stats = useSellerStats(user?.id);
+
   const categoryStats = getProductCategoryStats();
   const demandTrend = getSellerDemandTrend();
-  const locationDemand = getDemandByLocation().slice(0, 6).map(d => ({
-    state: d.state,
-    demand: d.productDemand,
-  }));
+  const locationDemand = getDemandByLocation().slice(0, 6).map(d => ({ state: d.state, demand: d.productDemand }));
   const businessIdeas = suggestBusinessIdeas("Handicrafts", "Tamil Nadu", "Chennai");
 
+  if (stats.loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   const widgets = [
-    { icon: Package, title: "Total Products", value: "12", sub: "3 pending approval", color: "text-primary" },
-    { icon: Eye, title: "Product Views", value: "2,450", sub: "+320 this week", color: "text-accent" },
-    { icon: ShoppingBag, title: "Orders Received", value: "27", sub: "5 to ship", color: "text-warm" },
-    { icon: IndianRupee, title: "Total Earnings", value: "₹48,500", sub: "This month", color: "text-success" },
+    { icon: Package, title: "Total Products", value: stats.totalProducts.toString(), sub: `${stats.pendingProducts} pending approval`, color: "text-primary" },
+    { icon: Eye, title: "Product Views", value: stats.totalViews.toLocaleString(), sub: "Total views", color: "text-accent" },
+    { icon: ShoppingBag, title: "Approved Products", value: stats.approvedProducts.toString(), sub: "Live on marketplace", color: "text-warm" },
+    { icon: IndianRupee, title: "Total Earnings", value: "₹0", sub: "Coming soon", color: "text-success" },
   ];
 
   return (
@@ -52,7 +60,6 @@ export default function SellerDashboard({ name }: Props) {
         </Link>
       </div>
 
-      {/* Stats */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {widgets.map((w, i) => (
           <motion.div key={w.title} {...anim(i)}>
@@ -74,9 +81,7 @@ export default function SellerDashboard({ name }: Props) {
         ))}
       </div>
 
-      {/* Charts Row 1 */}
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Bar Chart → Product Categories */}
         <motion.div {...anim(4)}>
           <Card className="h-full">
             <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><ShoppingBag className="h-5 w-5 text-primary" /> Product Categories</CardTitle></CardHeader>
@@ -94,7 +99,6 @@ export default function SellerDashboard({ name }: Props) {
           </Card>
         </motion.div>
 
-        {/* Line Chart → Demand Trend */}
         <motion.div {...anim(5)}>
           <Card className="h-full">
             <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><TrendingUp className="h-5 w-5 text-accent" /> Demand Trend</CardTitle></CardHeader>
@@ -115,7 +119,6 @@ export default function SellerDashboard({ name }: Props) {
         </motion.div>
       </div>
 
-      {/* Location Demand */}
       <motion.div {...anim(6)}>
         <Card>
           <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><MapPin className="h-5 w-5 text-primary" /> Product Demand by Location</CardTitle></CardHeader>
@@ -133,7 +136,6 @@ export default function SellerDashboard({ name }: Props) {
         </Card>
       </motion.div>
 
-      {/* AI Business Insights */}
       <motion.div {...anim(7)}>
         <Card>
           <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><Star className="h-5 w-5 text-warm" /> 🤖 AI Business Insights</CardTitle></CardHeader>

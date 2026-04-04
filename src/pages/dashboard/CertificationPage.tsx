@@ -1,25 +1,18 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { BadgeCheck, XCircle, Search, History, Upload, Loader2 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { BadgeCheck, XCircle, Search, History, Upload } from "lucide-react";
 
-interface CertRecord {
-  id: string;
-  certificate_id: string;
-  holder_name: string | null;
-  provider: string | null;
-  status: string;
-  verified_at: string | null;
-  created_at: string;
+interface CertResult {
+  name: string;
+  authority: string;
+  status: "Verified" | "Not Verified";
 }
 
-const mockCerts: Record<string, { name: string; authority: string; status: "Verified" | "Not Verified" }> = {
+const mockCerts: Record<string, CertResult> = {
   "CERT-2025-001": { name: "Priya Sharma", authority: "NSDC – National Skill Development Corporation", status: "Verified" },
   "CERT-2025-002": { name: "Meena Devi", authority: "PMKVY – Kaushal Vikas Yojana", status: "Verified" },
   "CERT-2025-003": { name: "Unknown", authority: "Unknown", status: "Not Verified" },
@@ -29,67 +22,29 @@ const mockCerts: Record<string, { name: string; authority: string; status: "Veri
   "CERT-2026-002": { name: "Anjali Devi", authority: "FSSAI – Food Safety Certificate", status: "Verified" },
 };
 
+interface HistoryEntry {
+  id: string;
+  certId: string;
+  result: CertResult;
+  date: string;
+}
+
 export default function CertificationPage() {
-  const { user } = useAuth();
   const [certId, setCertId] = useState("");
-  const [result, setResult] = useState<typeof mockCerts[string] | null>(null);
+  const [result, setResult] = useState<CertResult | null>(null);
   const [searched, setSearched] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [history, setHistory] = useState<CertRecord[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
-  // Fetch verification history
-  useEffect(() => {
-    if (!user) return;
-    const fetchHistory = async () => {
-      const { data } = await supabase
-        .from("certificates")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-      if (data) setHistory(data as CertRecord[]);
-      setLoadingHistory(false);
-    };
-    fetchHistory();
-  }, [user]);
-
-  const verify = async () => {
+  const verify = () => {
     if (!certId.trim()) return;
     const upperCertId = certId.trim().toUpperCase();
     const found = mockCerts[upperCertId] || { name: "—", authority: "—", status: "Not Verified" as const };
     setResult(found);
     setSearched(true);
-
-    // Save to database
-    if (user) {
-      setSaving(true);
-      const { error } = await supabase.from("certificates").insert({
-        user_id: user.id,
-        certificate_id: upperCertId,
-        holder_name: found.name,
-        provider: found.authority,
-        status: found.status === "Verified" ? "verified" : "not_verified",
-        verified_at: found.status === "Verified" ? new Date().toISOString() : null,
-      });
-      if (!error) {
-        // Refresh history
-        const { data } = await supabase
-          .from("certificates")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
-        if (data) setHistory(data as CertRecord[]);
-        // Add notification
-        await supabase.from("notifications").insert({
-          user_id: user.id,
-          title: found.status === "Verified" ? "Certificate Verified ✅" : "Certificate Not Verified ❌",
-          description: `Certificate ${upperCertId} has been ${found.status === "Verified" ? "verified" : "marked as not verified"}.`,
-          type: found.status === "Verified" ? "success" : "warning",
-        });
-        toast.success("Verification result saved to your profile");
-      }
-      setSaving(false);
-    }
+    setHistory(prev => [
+      { id: crypto.randomUUID(), certId: upperCertId, result: found, date: new Date().toISOString() },
+      ...prev,
+    ]);
   };
 
   return (
@@ -99,7 +54,6 @@ export default function CertificationPage() {
         <p className="text-muted-foreground">Verify the authenticity of any certificate issued through our programs.</p>
       </div>
 
-      {/* Verification Form */}
       <Card>
         <CardContent className="p-6 space-y-4">
           <div className="space-y-2">
@@ -108,7 +62,6 @@ export default function CertificationPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="cert-verify-input"
                   placeholder="Enter Certificate ID (e.g., CERT-2025-001)"
                   value={certId}
                   onChange={e => setCertId(e.target.value)}
@@ -116,9 +69,7 @@ export default function CertificationPage() {
                   className="pl-9"
                 />
               </div>
-              <Button id="cert-verify-btn" onClick={verify} disabled={saving || !certId.trim()}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify"}
-              </Button>
+              <Button onClick={verify} disabled={!certId.trim()}>Verify</Button>
             </div>
           </div>
 
@@ -138,11 +89,6 @@ export default function CertificationPage() {
                 <div><span className="text-muted-foreground">Name:</span> <span className="font-medium">{result.name}</span></div>
                 <div><span className="text-muted-foreground">Issuing Authority:</span> <span className="font-medium">{result.authority}</span></div>
               </div>
-              {result.status === "Verified" && (
-                <Button variant="outline" size="sm" className="mt-3" onClick={() => window.open("https://www.nsdcindia.org/verify-certificate", "_blank")}>
-                  View Official Verification
-                </Button>
-              )}
             </div>
           )}
 
@@ -152,7 +98,6 @@ export default function CertificationPage() {
         </CardContent>
       </Card>
 
-      {/* Verification History */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-sans flex items-center gap-2">
@@ -161,34 +106,28 @@ export default function CertificationPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {loadingHistory ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : history.length === 0 ? (
+          {history.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">No verification history yet. Verify a certificate above.</p>
           ) : (
             <div className="space-y-2">
-              {history.map((cert, i) => (
-                <div key={cert.id}>
+              {history.map((entry, i) => (
+                <div key={entry.id}>
                   {i > 0 && <Separator className="my-2" />}
                   <div className="flex items-center gap-3">
-                    {cert.status === "verified" ? (
+                    {entry.result.status === "Verified" ? (
                       <BadgeCheck className="h-4 w-4 text-success flex-shrink-0" />
                     ) : (
                       <XCircle className="h-4 w-4 text-destructive flex-shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{cert.certificate_id}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {cert.holder_name} · {cert.provider}
-                      </p>
+                      <p className="text-sm font-medium truncate">{entry.certId}</p>
+                      <p className="text-xs text-muted-foreground truncate">{entry.result.name} · {entry.result.authority}</p>
                     </div>
-                    <span className={`text-xs font-medium ${cert.status === "verified" ? "text-success" : "text-destructive"}`}>
-                      {cert.status === "verified" ? "Verified ✅" : "Not Verified ❌"}
+                    <span className={`text-xs font-medium ${entry.result.status === "Verified" ? "text-success" : "text-destructive"}`}>
+                      {entry.result.status === "Verified" ? "Verified ✅" : "Not Verified ❌"}
                     </span>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {new Date(cert.created_at).toLocaleDateString()}
+                      {new Date(entry.date).toLocaleDateString()}
                     </span>
                   </div>
                 </div>

@@ -40,13 +40,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserData = useCallback(async (userId: string) => {
     const [profileRes, rolesRes, questionnaireRes] = await Promise.all([
-      supabase.from("profiles").select("full_name, location, interest, state, city, first_login").eq("user_id", userId).single(),
+      supabase.from("profiles").select("full_name, location, interest").eq("user_id", userId).single(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
-      supabase.from("questionnaire_responses").select("answers").eq("user_id", userId).single(),
+      supabase.from("questionnaire_responses").select("responses").eq("user_id", userId).single(),
     ]);
-    if (profileRes.data) setProfile(profileRes.data);
+
+    if (profileRes.data) {
+      const hasQuestionnaire = !!questionnaireRes.data;
+      const loc = profileRes.data.location || "";
+      const parts = loc.split(",").map(s => s.trim());
+      const city = parts.length > 1 ? parts[0] : null;
+      const state = parts.length > 1 ? parts[1] : parts[0] || null;
+      setProfile({ ...profileRes.data, state, city, first_login: !hasQuestionnaire });
+    }
     if (rolesRes.data) setRoles(rolesRes.data.map((r) => r.role));
-    if (questionnaireRes.data) setQuestionnaire(questionnaireRes.data.answers as unknown as QuestionnaireAnswers);
+    if (questionnaireRes.data) setQuestionnaire(questionnaireRes.data.responses as unknown as QuestionnaireAnswers);
   }, []);
 
   useEffect(() => {
@@ -90,18 +98,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const completeQuestionnaire = async (answers: QuestionnaireAnswers) => {
     if (!user) return;
-    // Upsert questionnaire
-    await supabase.from("questionnaire_responses").upsert({
+    await supabase.from("questionnaire_responses").insert({
       user_id: user.id,
-      answers: answers as unknown as import("@/integrations/supabase/types").Json,
-    }, { onConflict: "user_id" });
-    // Mark first_login false
-    await supabase.from("profiles").update({ first_login: false }).eq("user_id", user.id);
+      role: "user",
+      responses: answers as unknown as import("@/integrations/supabase/types").Json,
+    });
     // Add notification
     await supabase.from("notifications").insert({
       user_id: user.id,
       title: "Profile Complete! 🎯",
-      description: "Your personalized dashboard is ready. Explore recommended courses, schemes, and mentors.",
+      message: "Your personalized dashboard is ready. Explore recommended courses, schemes, and mentors.",
       type: "success",
     });
     setQuestionnaire(answers);
@@ -114,8 +120,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data.full_name !== undefined) updateData.full_name = data.full_name;
     if (data.location !== undefined) updateData.location = data.location;
     if (data.interest !== undefined) updateData.interest = data.interest;
-    if (data.state !== undefined) updateData.state = data.state;
-    if (data.city !== undefined) updateData.city = data.city;
     await supabase.from("profiles").update(updateData).eq("user_id", user.id);
     setProfile(prev => prev ? { ...prev, ...data } : prev);
   };
