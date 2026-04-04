@@ -1,7 +1,23 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, ShoppingBag, GraduationCap, Shield, TrendingUp, AlertTriangle } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Users, ShoppingBag, GraduationCap, Shield, TrendingUp, MapPin,
+  Package, Landmark, UserCheck, BookOpen,
+} from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend, LineChart, Line,
+} from "recharts";
+import { getStats } from "@/data/mockDatabase";
+import { GROWTH_DATA } from "@/data/mockDatabase";
+import {
+  getDemandByLocation, getLocationHeatmapData, getTrendingSkills,
+  getSkillDemandForState, getMostSearchedCourses,
+} from "@/data/demandEngine";
+import { INDIAN_STATES } from "@/data/locationData";
 
 const anim = (i: number) => ({
   initial: { opacity: 0, y: 16, filter: "blur(4px)" } as const,
@@ -9,41 +25,47 @@ const anim = (i: number) => ({
   transition: { duration: 0.5, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] as const },
 });
 
-const widgets = [
-  { icon: Users, title: "Total Users", value: "1,245", sub: "+48 this week", color: "text-primary" },
-  { icon: GraduationCap, title: "Active Courses", value: "18", sub: "3 pending review", color: "text-accent" },
-  { icon: ShoppingBag, title: "Marketplace Items", value: "342", sub: "12 flagged", color: "text-warm" },
-  { icon: Shield, title: "Mentors Active", value: "24", sub: "6 applications", color: "text-success" },
-];
-
-const userGrowth = [
-  { month: "Jan", users: 820 },
-  { month: "Feb", users: 910 },
-  { month: "Mar", users: 985 },
-  { month: "Apr", users: 1050 },
-  { month: "May", users: 1150 },
-  { month: "Jun", users: 1245 },
-];
-
-const roleDistribution = [
-  { name: "Users", value: 1100 },
-  { name: "Sellers", value: 95 },
-  { name: "Mentors", value: 24 },
-  { name: "Admins", value: 4 },
-];
-const PIE_COLORS = ["hsl(24,85%,48%)", "hsl(158,45%,42%)", "hsl(35,60%,52%)", "hsl(0,72%,51%)"];
-
-const recentFlags = [
-  { type: "Product", item: "Unapproved supplement", by: "Auto-flag", time: "2h ago" },
-  { type: "User", item: "Spam account reported", by: "Community", time: "5h ago" },
-  { type: "Review", item: "Abusive language detected", by: "AI Filter", time: "1d ago" },
-];
+const PIE_COLORS = ["hsl(24,85%,48%)", "hsl(158,45%,42%)", "hsl(35,60%,52%)", "hsl(200,60%,50%)", "hsl(280,40%,55%)", "hsl(0,72%,51%)"];
+const BAR_COLORS = ["hsl(24,85%,48%)", "hsl(158,45%,42%)", "hsl(35,60%,52%)"];
 
 interface Props {
   name: string;
 }
 
 export default function AdminDashboard({ name }: Props) {
+  const stats = getStats();
+  const [selectedState, setSelectedState] = useState("Tamil Nadu");
+
+  // Widget data
+  const widgets = [
+    { icon: Users, title: "Total Users", value: stats.totalUsers.toLocaleString(), sub: "+12 this week", color: "text-primary" },
+    { icon: ShoppingBag, title: "Total Sellers", value: stats.totalSellers.toLocaleString(), sub: `${stats.pendingSellers} pending`, color: "text-warm" },
+    { icon: UserCheck, title: "Total Mentors", value: stats.totalMentors.toLocaleString(), sub: "2 new this month", color: "text-accent" },
+    { icon: Package, title: "Total Products", value: stats.totalProducts.toLocaleString(), sub: "3 pending review", color: "text-success" },
+    { icon: BookOpen, title: "Total Courses", value: stats.totalCourses.toLocaleString(), sub: "5 free courses", color: "text-primary" },
+    { icon: Landmark, title: "Total Schemes", value: stats.totalSchemes.toLocaleString(), sub: "All active", color: "text-warm" },
+  ];
+
+  // Chart data
+  const roleData = [
+    { name: "Users", count: stats.totalUsers - stats.totalSellers - stats.totalMentors - 1 },
+    { name: "Sellers", count: stats.totalSellers },
+    { name: "Mentors", count: stats.totalMentors },
+  ];
+
+  const platformDistribution = [
+    { name: "Courses", value: stats.totalCourses },
+    { name: "Products", value: stats.totalProducts },
+    { name: "Schemes", value: stats.totalSchemes },
+    { name: "Mentors", value: stats.totalMentors },
+  ];
+
+  const heatmap = getLocationHeatmapData().slice(0, 10);
+  const stateDemand = getSkillDemandForState(selectedState);
+  const trendingSkills = getTrendingSkills().slice(0, 6);
+  const mostSearched = getMostSearchedCourses();
+  const locationDemand = getDemandByLocation().slice(0, 10);
+
   return (
     <div className="space-y-8">
       <div>
@@ -51,81 +73,234 @@ export default function AdminDashboard({ name }: Props) {
         <p className="text-muted-foreground">Welcome, {name}. Here's the platform overview.</p>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* ── 6 Stat Widgets ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         {widgets.map((w, i) => (
           <motion.div key={w.title} {...anim(i)}>
-            <Card>
-              <CardContent className="p-5">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className={`h-10 w-10 rounded-lg bg-muted flex items-center justify-center ${w.color}`}>
-                    <w.icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold font-sans">{w.value}</p>
-                    <p className="text-xs text-muted-foreground">{w.title}</p>
-                  </div>
+            <Card className="h-full">
+              <CardContent className="p-4">
+                <div className={`h-9 w-9 rounded-lg bg-muted flex items-center justify-center ${w.color} mb-2`}>
+                  <w.icon className="h-4 w-4" />
                 </div>
-                <p className="text-xs text-muted-foreground">{w.sub}</p>
+                <p className="text-2xl font-bold font-sans">{w.value}</p>
+                <p className="text-xs text-muted-foreground">{w.title}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">{w.sub}</p>
               </CardContent>
             </Card>
           </motion.div>
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <motion.div {...anim(4)}>
-          <Card className="h-full">
-            <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><TrendingUp className="h-5 w-5 text-primary" /> User Growth</CardTitle></CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={userGrowth}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(30,15%,88%)" />
-                  <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Bar dataKey="users" fill="hsl(24,85%,48%)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </motion.div>
+      {/* ── Tabs ── */}
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="location">Location Analytics</TabsTrigger>
+          <TabsTrigger value="growth">Growth & Trends</TabsTrigger>
+        </TabsList>
 
-        <motion.div {...anim(5)}>
-          <Card className="h-full">
-            <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><Users className="h-5 w-5 text-accent" /> Role Distribution</CardTitle></CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={220}>
-                <PieChart>
-                  <Pie data={roleDistribution} cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={3} dataKey="value">
-                    {roleDistribution.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+        {/* ── Tab: Overview ── */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Bar Chart → Users by Role */}
+            <motion.div {...anim(6)}>
+              <Card className="h-full">
+                <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><Users className="h-5 w-5 text-primary" /> Users by Role</CardTitle></CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={roleData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(30,15%,88%)" />
+                      <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                      <YAxis tick={{ fontSize: 11 }} />
+                      <Tooltip />
+                      <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                        {roleData.map((_, i) => <Cell key={i} fill={BAR_COLORS[i % BAR_COLORS.length]} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </motion.div>
 
-      <motion.div {...anim(6)}>
-        <Card>
-          <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-destructive" /> Recent Flags</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {recentFlags.map(f => (
-                <div key={f.item} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div>
-                    <p className="font-medium text-sm">{f.item}</p>
-                    <p className="text-xs text-muted-foreground">{f.type} · Flagged by {f.by}</p>
+            {/* Pie Chart → Platform Distribution */}
+            <motion.div {...anim(7)}>
+              <Card className="h-full">
+                <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><Shield className="h-5 w-5 text-accent" /> Platform Distribution</CardTitle></CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie data={platformDistribution} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={3} dataKey="value">
+                        {platformDistribution.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Line Chart → Growth Over Time */}
+          <motion.div {...anim(8)}>
+            <Card>
+              <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><TrendingUp className="h-5 w-5 text-primary" /> Growth Over Time</CardTitle></CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={280}>
+                  <LineChart data={GROWTH_DATA}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(30,15%,88%)" />
+                    <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Line type="monotone" dataKey="users" stroke="hsl(24,85%,48%)" strokeWidth={2} dot={{ r: 3 }} name="Users" />
+                    <Line type="monotone" dataKey="sellers" stroke="hsl(158,45%,42%)" strokeWidth={2} dot={{ r: 3 }} name="Sellers" />
+                    <Line type="monotone" dataKey="mentors" stroke="hsl(35,60%,52%)" strokeWidth={2} dot={{ r: 3 }} name="Mentors" />
+                    <Line type="monotone" dataKey="products" stroke="hsl(200,60%,50%)" strokeWidth={2} dot={{ r: 3 }} name="Products" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </TabsContent>
+
+        {/* ── Tab: Location Analytics ── */}
+        <TabsContent value="location" className="space-y-6">
+          {/* Location Demand Heatmap Bar */}
+          <motion.div {...anim(0)}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-sans flex items-center gap-2"><MapPin className="h-5 w-5 text-primary" /> Location-Based Demand</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={heatmap} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(30,15%,88%)" />
+                    <XAxis type="number" tick={{ fontSize: 11 }} />
+                    <YAxis dataKey="state" type="category" tick={{ fontSize: 10 }} width={120} />
+                    <Tooltip />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="skillDemand" fill="hsl(24,85%,48%)" radius={[0, 4, 4, 0]} name="Skill Demand" />
+                    <Bar dataKey="businessDemand" fill="hsl(158,45%,42%)" radius={[0, 4, 4, 0]} name="Business Demand" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* State-specific drill-down */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            <motion.div {...anim(1)}>
+              <Card className="h-full">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg font-sans">Skill Demand by State</CardTitle>
+                    <Select value={selectedState} onValueChange={setSelectedState}>
+                      <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {INDIAN_STATES.filter(s => [
+                          "Tamil Nadu", "Maharashtra", "Rajasthan", "Gujarat", "Kerala",
+                          "Karnataka", "Uttar Pradesh", "West Bengal", "Delhi", "Bihar",
+                          "Telangana", "Andhra Pradesh", "Madhya Pradesh", "Punjab", "Haryana", "Odisha"
+                        ].includes(s)).map(s => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <span className="text-xs text-muted-foreground">{f.time}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={stateDemand}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(30,15%,88%)" />
+                      <XAxis dataKey="skill" tick={{ fontSize: 9 }} angle={-20} textAnchor="end" height={50} />
+                      <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} />
+                      <Tooltip />
+                      <Bar dataKey="score" fill="hsl(24,85%,48%)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Location Demand Insights Cards */}
+            <motion.div {...anim(2)}>
+              <Card className="h-full">
+                <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><MapPin className="h-5 w-5 text-accent" /> Demand Insights</CardTitle></CardHeader>
+                <CardContent className="space-y-3 max-h-[320px] overflow-y-auto">
+                  {locationDemand.slice(0, 6).map(d => (
+                    <div key={d.state} className="p-3 rounded-lg border hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-sm">{d.state}</span>
+                        <div className="flex gap-2">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">Course: {d.courseDemand}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent">Product: {d.productDemand}</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Top skills: {d.topSkills.join(", ")}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Trending: {d.topBusinessTypes.slice(0, 2).join(", ")}
+                      </p>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </TabsContent>
+
+        {/* ── Tab: Growth & Trends ── */}
+        <TabsContent value="growth" className="space-y-6">
+          <div className="grid lg:grid-cols-2 gap-6">
+            {/* Trending Skills */}
+            <motion.div {...anim(0)}>
+              <Card className="h-full">
+                <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><TrendingUp className="h-5 w-5 text-primary" /> Trending Skills</CardTitle></CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={trendingSkills}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(30,15%,88%)" />
+                      <XAxis dataKey="skill" tick={{ fontSize: 10 }} angle={-15} textAnchor="end" height={50} />
+                      <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} />
+                      <Tooltip />
+                      <Bar dataKey="score" radius={[4, 4, 0, 0]}>
+                        {trendingSkills.map((s, i) => (
+                          <Cell key={i} fill={s.trend === "rising" ? "hsl(158,45%,42%)" : s.trend === "stable" ? "hsl(35,60%,52%)" : "hsl(0,72%,51%)"} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[hsl(158,45%,42%)]" /> Rising</span>
+                    <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[hsl(35,60%,52%)]" /> Stable</span>
+                    <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[hsl(0,72%,51%)]" /> Declining</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Most Searched Courses */}
+            <motion.div {...anim(1)}>
+              <Card className="h-full">
+                <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><GraduationCap className="h-5 w-5 text-warm" /> Most Searched Courses</CardTitle></CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={mostSearched} layout="vertical">
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(30,15%,88%)" />
+                      <XAxis type="number" tick={{ fontSize: 11 }} />
+                      <YAxis dataKey="name" type="category" tick={{ fontSize: 9 }} width={140} />
+                      <Tooltip />
+                      <Bar dataKey="enrolled" fill="hsl(35,60%,52%)" radius={[0, 4, 4, 0]} name="Enrolled" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

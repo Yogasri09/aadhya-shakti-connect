@@ -3,8 +3,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bell, Landmark, GraduationCap, CalendarDays, ShoppingBag, BadgeCheck, Bot, Sparkles, CheckCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Bell, Landmark, GraduationCap, CalendarDays, ShoppingBag, BadgeCheck, Bot,
+  Sparkles, CheckCheck, TrendingUp, Users, Package, AlertTriangle,
+} from "lucide-react";
 import { toast } from "sonner";
+import { MOCK_NOTIFICATIONS } from "@/data/mockDatabase";
 
 interface Notification {
   id: string;
@@ -13,37 +19,61 @@ interface Notification {
   type: string;
   read: boolean;
   created_at: string;
+  role?: string;
 }
 
 const iconMap: Record<string, typeof Bell> = {
   welcome: Sparkles,
   success: BadgeCheck,
-  warning: Bell,
+  warning: AlertTriangle,
   course: GraduationCap,
   scheme: Landmark,
   event: CalendarDays,
   order: ShoppingBag,
   ai: Bot,
   info: Bell,
+  demand: TrendingUp,
+  mentor: Users,
+  product: Package,
 };
 
-const defaultNotifications = [
-  { id: "d1", title: "New Scheme Available", description: "Annapurna Scheme for women in food business — loans up to ₹50,000.", type: "scheme", read: false, created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
-  { id: "d2", title: "Course Starting Soon", description: "Beautician Training batch starting April 1. Enroll now!", type: "course", read: false, created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() },
-  { id: "d3", title: "Event Reminder", description: "Women Entrepreneur Expo is in 5 days. Don't forget to register.", type: "event", read: false, created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() },
-  { id: "d4", title: "AI Recommendation", description: "Based on your interests, check out the new Digital Marketing course!", type: "ai", read: true, created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
-  { id: "d5", title: "Application Update", description: "Your PMMY loan application has been reviewed. Check status.", type: "scheme", read: true, created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
-];
+// Build notifications from mock + defaults
+function buildNotifications(role: string): Notification[] {
+  // Role-specific mock notifications
+  const mockNotifs = MOCK_NOTIFICATIONS
+    .filter(n => n.role === role || n.role === "all")
+    .map(n => ({
+      id: n.id,
+      title: n.title,
+      description: n.description,
+      type: n.type,
+      read: n.read,
+      created_at: n.createdAt,
+      role: n.role,
+    }));
+
+  // Add default platform notifications
+  const defaults: Notification[] = [
+    { id: "d1", title: "New Scheme Available 🏛️", description: "Annapurna Scheme for women in food business — loans up to ₹50,000.", type: "scheme", read: false, created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString() },
+    { id: "d2", title: "Course Starting Soon 📚", description: "Beautician Training batch starting April 1. Enroll now!", type: "course", read: false, created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() },
+    { id: "d3", title: "Event Reminder 📅", description: "Women Entrepreneur Expo is in 5 days. Don't forget to register.", type: "event", read: false, created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString() },
+    { id: "d4", title: "AI Recommendation 🤖", description: "Based on your interests, check out the new Digital Marketing course!", type: "ai", read: true, created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
+  ];
+
+  return [...mockNotifs, ...defaults].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+}
 
 export default function NotificationsPage() {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
+  const currentRole = roles.includes("admin") ? "admin" : roles.includes("mentor") ? "mentor" : roles.includes("seller") ? "seller" : "user";
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     const fetchNotifications = async () => {
       if (!user) {
-        setNotifications(defaultNotifications as Notification[]);
+        setNotifications(buildNotifications(currentRole));
         setLoading(false);
         return;
       }
@@ -54,20 +84,18 @@ export default function NotificationsPage() {
         .order("created_at", { ascending: false });
 
       if (data && data.length > 0) {
-        setNotifications(data as Notification[]);
+        setNotifications([...data as Notification[], ...buildNotifications(currentRole)]);
       } else {
-        setNotifications(defaultNotifications as Notification[]);
+        setNotifications(buildNotifications(currentRole));
       }
       setLoading(false);
     };
     fetchNotifications();
-  }, [user]);
+  }, [user, currentRole]);
 
   const markAsRead = async (notifId: string) => {
-    // Update local state
     setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n));
-    // Update in DB if real notification
-    if (user && !notifId.startsWith("d")) {
+    if (user && !notifId.startsWith("d") && !notifId.startsWith("n")) {
       await supabase.from("notifications").update({ read: true }).eq("id", notifId);
     }
   };
@@ -89,7 +117,20 @@ export default function NotificationsPage() {
     return `${days} day${days > 1 ? "s" : ""} ago`;
   };
 
+  const filtered = filter === "all"
+    ? notifications
+    : filter === "unread"
+      ? notifications.filter(n => !n.read)
+      : notifications.filter(n => n.type === filter);
+
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const typeColor: Record<string, string> = {
+    info: "bg-blue-100 text-blue-700",
+    success: "bg-green-100 text-green-700",
+    warning: "bg-yellow-100 text-yellow-700",
+    demand: "bg-purple-100 text-purple-700",
+  };
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -108,36 +149,63 @@ export default function NotificationsPage() {
         )}
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {notifications.map((n) => {
-            const Icon = iconMap[n.type] || Bell;
-            return (
-              <Card
-                key={n.id}
-                className={`cursor-pointer transition-colors ${!n.read ? "border-primary/20 bg-primary/[0.02] hover:bg-primary/[0.04]" : "hover:bg-muted/30"}`}
-                onClick={() => markAsRead(n.id)}
-              >
-                <CardContent className="p-4 flex items-start gap-3">
-                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0 ${!n.read ? "hero-gradient" : "bg-muted"}`}>
-                    <Icon className={`h-4 w-4 ${!n.read ? "text-primary-foreground" : "text-muted-foreground"}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm ${!n.read ? "font-semibold" : "font-medium"}`}>{n.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{n.description}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{getTimeAgo(n.created_at)}</p>
-                  </div>
-                  {!n.read && <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-2" />}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+      {/* Filter Tabs */}
+      <Tabs value={filter} onValueChange={setFilter}>
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="unread">Unread ({unreadCount})</TabsTrigger>
+          <TabsTrigger value="demand">📈 Demand</TabsTrigger>
+          <TabsTrigger value="info">ℹ️ Info</TabsTrigger>
+          <TabsTrigger value="success">✅ Success</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={filter} className="mt-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filtered.map((n) => {
+                const Icon = iconMap[n.type] || Bell;
+                return (
+                  <Card
+                    key={n.id}
+                    className={`cursor-pointer transition-colors ${!n.read ? "border-primary/20 bg-primary/[0.02] hover:bg-primary/[0.04]" : "hover:bg-muted/30"}`}
+                    onClick={() => markAsRead(n.id)}
+                  >
+                    <CardContent className="p-4 flex items-start gap-3">
+                      <div className={`h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0 ${!n.read ? "hero-gradient" : "bg-muted"}`}>
+                        <Icon className={`h-4 w-4 ${!n.read ? "text-primary-foreground" : "text-muted-foreground"}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className={`text-sm ${!n.read ? "font-semibold" : "font-medium"}`}>{n.title}</p>
+                          {n.type === "demand" && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-purple-50 text-purple-600 border-purple-200">
+                              Demand Alert
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{n.description}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{getTimeAgo(n.created_at)}</p>
+                      </div>
+                      {!n.read && <div className="h-2 w-2 rounded-full bg-primary flex-shrink-0 mt-2" />}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+
+              {filtered.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <Bell className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                  <p>No notifications in this category.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -67,3 +67,65 @@ export interface QuestionnaireAnswers {
   needCertification?: string;
   language?: string;
 }
+
+// ─── Mentor Questionnaire ───
+export const MENTOR_QUESTIONNAIRE_OPTIONS = {
+  expertiseArea: ["Business Strategy", "Career Guidance", "Technical Skills", "Financial Planning", "Digital Marketing", "Fashion & Career", "Healthcare Training", "Arts & Crafts"],
+  yearsOfExperience: ["0-2 years", "3-5 years", "6-10 years", "10+ years"],
+  mentoringType: ["Career Guidance", "Business Mentoring", "Technical Training"],
+  availability: ["Less than 5 hours/week", "5-10 hours/week", "10-15 hours/week", "More than 15 hours/week"],
+  preferredAudience: ["Beginners", "Intermediate", "Advanced", "All Levels"],
+  mentoringMode: ["Online Only", "Offline Only", "Both Online & Offline"],
+  languagesKnown: ["English", "Hindi", "Tamil", "Telugu", "Kannada", "Malayalam", "Marathi", "Gujarati", "Bengali", "Punjabi"],
+  groupMentoring: ["Yes", "No"],
+  paidMentoring: ["Yes, Paid Only", "No, Free Only", "Both Paid & Free"],
+  domainDemandAwareness: ["Yes", "No"],
+  willingToTravel: ["Yes", "No"],
+  certificationsHeld: ["Yes", "No"],
+};
+
+export interface MentorQuestionnaireAnswers {
+  expertiseArea?: string;
+  yearsOfExperience?: string;
+  mentoringType?: string;
+  availability?: string;
+  preferredAudience?: string;
+  mentoringMode?: string;
+  languagesKnown?: string[];
+  groupMentoring?: string;
+  paidMentoring?: string;
+  domainDemandAwareness?: string;
+  willingToTravel?: string;
+  certificationsHeld?: string;
+}
+
+// ─── Seller Questionnaire ───
+export const SELLER_QUESTIONNAIRE_OPTIONS = {
+  businessType: ["Handmade / Handicraft", "Digital Products / Services", "Food & Catering", "Fashion & Textiles", "Beauty Products", "Other Services"],
+  productCategory: ["Clothing & Accessories", "Home Decor", "Food & Beverages", "Beauty & Wellness", "Art & Crafts", "Digital Products", "Jewelry", "Others"],
+  experienceLevel: ["Beginner (< 1 year)", "Intermediate (1-3 years)", "Experienced (3-5 years)", "Expert (5+ years)"],
+  monthlyCapacity: ["1-10 products", "11-50 products", "51-100 products", "100+ products"],
+  pricingRange: ["Budget (< ₹500)", "Mid-range (₹500 - ₹2,000)", "Premium (₹2,000 - ₹10,000)", "Luxury (₹10,000+)"],
+  targetAudience: ["Local Community", "State-wide", "National", "International"],
+  onlineSellingExperience: ["No Experience", "Social Media Only", "E-commerce Platforms", "Own Website"],
+  interestedInTraining: ["Yes", "No"],
+  deliveryCapability: ["Local Only", "State-wide", "National", "International"],
+  preferredLanguage: ["English", "Hindi", "Tamil", "Telugu", "Kannada", "Malayalam", "Marathi", "Gujarati", "Bengali"],
+  marketplaceInterest: ["Yes, List on Aadhya Marketplace", "No, Just Want Tools"],
+  needFinancialHelp: ["Yes", "No"],
+};
+
+export interface SellerQuestionnaireAnswers {
+  businessType?: string;
+  productCategory?: string;
+  experienceLevel?: string;
+  monthlyCapacity?: string;
+  pricingRange?: string;
+  targetAudience?: string;
+  onlineSellingExperience?: string;
+  interestedInTraining?: string;
+  deliveryCapability?: string;
+  preferredLanguage?: string;
+  marketplaceInterest?: string;
+  needFinancialHelp?: string;
+}

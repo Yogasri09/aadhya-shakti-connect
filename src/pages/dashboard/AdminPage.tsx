@@ -5,56 +5,21 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Users, ShoppingBag, Landmark, Trash2, CheckCircle, XCircle, Search, UserCheck, AlertTriangle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Users, ShoppingBag, Landmark, Trash2, CheckCircle, XCircle, Search,
+  UserCheck, AlertTriangle, MapPin, TrendingUp, BarChart3,
+} from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from "recharts";
 import { toast } from "sonner";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: "user" | "seller" | "mentor" | "admin";
-  status: "active" | "suspended";
-  joined: string;
-  location: string;
-}
-
-interface Seller {
-  id: string;
-  name: string;
-  products: number;
-  status: "pending" | "approved" | "rejected";
-  applied: string;
-}
-
-const mockUsers: User[] = [
-  { id: "1", name: "Priya Sharma", email: "priya@email.com", role: "user", status: "active", joined: "2025-11-10", location: "Delhi" },
-  { id: "2", name: "Anita Verma", email: "anita@email.com", role: "seller", status: "active", joined: "2025-12-01", location: "Mumbai" },
-  { id: "3", name: "Kavitha R", email: "kavitha@email.com", role: "mentor", status: "active", joined: "2026-01-15", location: "Chennai" },
-  { id: "4", name: "Meena Devi", email: "meena@email.com", role: "user", status: "active", joined: "2026-02-20", location: "Jaipur" },
-  { id: "5", name: "Sunita Yadav", email: "sunita@email.com", role: "user", status: "suspended", joined: "2026-01-05", location: "Lucknow" },
-  { id: "6", name: "Rekha Gupta", email: "rekha@email.com", role: "seller", status: "active", joined: "2026-03-01", location: "Kolkata" },
-  { id: "7", name: "Lakshmi N", email: "lakshmi@email.com", role: "user", status: "active", joined: "2026-03-10", location: "Hyderabad" },
-  { id: "8", name: "Deepa Mishra", email: "deepa@email.com", role: "mentor", status: "active", joined: "2025-10-20", location: "Pune" },
-];
-
-const mockSellers: Seller[] = [
-  { id: "s1", name: "Anita Verma", products: 8, status: "approved", applied: "2025-12-01" },
-  { id: "s2", name: "Rekha Gupta", products: 3, status: "pending", applied: "2026-03-01" },
-  { id: "s3", name: "Fatima Khan", products: 0, status: "pending", applied: "2026-03-20" },
-  { id: "s4", name: "Geeta Patel", products: 5, status: "rejected", applied: "2026-02-15" },
-];
-
-const schemes = [
-  { id: "sc1", name: "PMMY - Mudra Loan", status: "active", applications: 234 },
-  { id: "sc2", name: "Stand-Up India", status: "active", applications: 189 },
-  { id: "sc3", name: "PMEGP", status: "active", applications: 156 },
-  { id: "sc4", name: "Startup India", status: "active", applications: 98 },
-  { id: "sc5", name: "Mahila E-Haat", status: "active", applications: 312 },
-  { id: "sc6", name: "DDU-GKY", status: "active", applications: 145 },
-  { id: "sc7", name: "Skill India", status: "active", applications: 267 },
-  { id: "sc8", name: "TN Women Dev Scheme", status: "active", applications: 78 },
-];
+import {
+  MOCK_USERS, MOCK_SELLERS, MOCK_SCHEMES, MOCK_MENTORS,
+  type MockUser, type MockSeller,
+} from "@/data/mockDatabase";
+import { getDemandByLocation, getSkillDemandForState } from "@/data/demandEngine";
+import { INDIAN_STATES } from "@/data/locationData";
 
 const roleColor: Record<string, string> = {
   user: "bg-muted text-muted-foreground",
@@ -64,14 +29,19 @@ const roleColor: Record<string, string> = {
 };
 
 export default function AdminPage() {
-  const [users, setUsers] = useState(mockUsers);
-  const [sellers, setSellers] = useState(mockSellers);
+  const [users, setUsers] = useState<MockUser[]>([...MOCK_USERS]);
+  const [sellers, setSellers] = useState<MockSeller[]>([...MOCK_SELLERS]);
   const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [stateFilter, setStateFilter] = useState("all");
+  const [analyticsState, setAnalyticsState] = useState("Tamil Nadu");
 
-  const filteredUsers = users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
+    const matchesRole = roleFilter === "all" || u.role === roleFilter;
+    const matchesState = stateFilter === "all" || u.state === stateFilter;
+    return matchesSearch && matchesRole && matchesState;
+  });
 
   const deleteUser = (id: string) => {
     setUsers(prev => prev.filter(u => u.id !== id));
@@ -89,22 +59,28 @@ export default function AdminPage() {
   };
 
   const rejectSeller = (id: string) => {
-    setSellers(prev => prev.map(s => s.id === id ? { ...s, status: "rejected" as const } : s));
+    setSellers(prev => prev.map(s => s.id === id ? { ...s, status: "pending" as const } : s));
     toast.success("Seller rejected");
   };
 
   const stats = [
     { icon: Users, label: "Total Users", value: users.length, color: "text-primary" },
     { icon: ShoppingBag, label: "Pending Sellers", value: sellers.filter(s => s.status === "pending").length, color: "text-warm" },
-    { icon: Landmark, label: "Active Schemes", value: schemes.length, color: "text-accent" },
+    { icon: UserCheck, label: "Active Mentors", value: MOCK_MENTORS.filter(m => m.status === "active").length, color: "text-accent" },
     { icon: AlertTriangle, label: "Suspended", value: users.filter(u => u.status === "suspended").length, color: "text-destructive" },
   ];
+
+  const locationDemand = getDemandByLocation().slice(0, 8);
+  const skillDemand = getSkillDemandForState(analyticsState);
+
+  // Get unique states from users
+  const userStates = Array.from(new Set(users.map(u => u.state))).sort();
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl md:text-3xl mb-1">Admin Panel</h1>
-        <p className="text-muted-foreground">Manage users, sellers, and schemes.</p>
+        <p className="text-muted-foreground">Manage users, sellers, mentors, and view analytics.</p>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -124,18 +100,38 @@ export default function AdminPage() {
       </div>
 
       <Tabs defaultValue="users">
-        <TabsList>
+        <TabsList className="flex-wrap">
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="sellers">Seller Approvals</TabsTrigger>
+          <TabsTrigger value="mentors">Mentors</TabsTrigger>
           <TabsTrigger value="schemes">Schemes</TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-1"><BarChart3 className="h-3 w-3" /> Analytics</TabsTrigger>
         </TabsList>
 
+        {/* ── Users ── */}
         <TabsContent value="users" className="space-y-4">
-          <div className="flex gap-2">
-            <div className="relative flex-1 max-w-sm">
+          <div className="flex flex-wrap gap-2">
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Search users..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
             </div>
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-[130px]"><SelectValue placeholder="Role" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="seller">Seller</SelectItem>
+                <SelectItem value="mentor">Mentor</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={stateFilter} onValueChange={setStateFilter}>
+              <SelectTrigger className="w-[160px]"><SelectValue placeholder="State" /></SelectTrigger>
+              <SelectContent className="max-h-60">
+                <SelectItem value="all">All States</SelectItem>
+                {userStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <Card>
             <div className="overflow-x-auto">
@@ -146,6 +142,7 @@ export default function AdminPage() {
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Location</TableHead>
+                    <TableHead>Interest</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Joined</TableHead>
                     <TableHead>Actions</TableHead>
@@ -155,13 +152,12 @@ export default function AdminPage() {
                   {filteredUsers.map(u => (
                     <TableRow key={u.id}>
                       <TableCell className="font-medium">{u.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                      <TableCell className="text-muted-foreground text-sm">{u.email}</TableCell>
                       <TableCell><Badge variant="outline" className={roleColor[u.role]}>{u.role}</Badge></TableCell>
-                      <TableCell>{u.location}</TableCell>
+                      <TableCell className="text-sm">{u.city}, {u.state}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{u.interest}</TableCell>
                       <TableCell>
-                        <Badge variant={u.status === "active" ? "default" : "destructive"}>
-                          {u.status}
-                        </Badge>
+                        <Badge variant={u.status === "active" ? "default" : "destructive"}>{u.status}</Badge>
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">{u.joined}</TableCell>
                       <TableCell>
@@ -179,9 +175,13 @@ export default function AdminPage() {
                 </TableBody>
               </Table>
             </div>
+            <div className="p-3 border-t text-xs text-muted-foreground">
+              Showing {filteredUsers.length} of {users.length} users
+            </div>
           </Card>
         </TabsContent>
 
+        {/* ── Seller Approvals ── */}
         <TabsContent value="sellers" className="space-y-4">
           <Card>
             <div className="overflow-x-auto">
@@ -189,8 +189,10 @@ export default function AdminPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Seller Name</TableHead>
+                    <TableHead>Business Type</TableHead>
+                    <TableHead>Location</TableHead>
                     <TableHead>Products</TableHead>
-                    <TableHead>Applied</TableHead>
+                    <TableHead>Rating</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -199,10 +201,12 @@ export default function AdminPage() {
                   {sellers.map(s => (
                     <TableRow key={s.id}>
                       <TableCell className="font-medium">{s.name}</TableCell>
-                      <TableCell>{s.products}</TableCell>
-                      <TableCell className="text-muted-foreground">{s.applied}</TableCell>
+                      <TableCell className="text-sm">{s.businessType}</TableCell>
+                      <TableCell className="text-sm">{s.city}, {s.state}</TableCell>
+                      <TableCell>{s.productCount}</TableCell>
+                      <TableCell>⭐ {s.rating}</TableCell>
                       <TableCell>
-                        <Badge variant={s.status === "approved" ? "default" : s.status === "rejected" ? "destructive" : "outline"}>
+                        <Badge variant={s.status === "active" ? "default" : s.status === "pending" ? "outline" : "destructive"}>
                           {s.status}
                         </Badge>
                       </TableCell>
@@ -226,6 +230,43 @@ export default function AdminPage() {
           </Card>
         </TabsContent>
 
+        {/* ── Mentors ── */}
+        <TabsContent value="mentors" className="space-y-4">
+          <Card>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Mentor Name</TableHead>
+                    <TableHead>Expertise</TableHead>
+                    <TableHead>Experience</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Mentees</TableHead>
+                    <TableHead>Rating</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {MOCK_MENTORS.map(m => (
+                    <TableRow key={m.id}>
+                      <TableCell className="font-medium">{m.name}</TableCell>
+                      <TableCell className="text-sm">{m.expertise}</TableCell>
+                      <TableCell className="text-sm">{m.experience} years</TableCell>
+                      <TableCell className="text-sm">{m.city}, {m.state}</TableCell>
+                      <TableCell>{m.menteeCount}</TableCell>
+                      <TableCell>⭐ {m.rating}</TableCell>
+                      <TableCell>
+                        <Badge variant={m.status === "active" ? "default" : "outline"}>{m.status}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
+        </TabsContent>
+
+        {/* ── Schemes ── */}
         <TabsContent value="schemes" className="space-y-4">
           <Card>
             <div className="overflow-x-auto">
@@ -233,21 +274,110 @@ export default function AdminPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Scheme Name</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Ministry</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Applications</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {schemes.map(s => (
+                  {MOCK_SCHEMES.map(s => (
                     <TableRow key={s.id}>
                       <TableCell className="font-medium">{s.name}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{s.ministry}</TableCell>
+                      <TableCell className="text-sm">{s.category}</TableCell>
+                      <TableCell>{s.applications.toLocaleString()}</TableCell>
                       <TableCell><Badge>{s.status}</Badge></TableCell>
-                      <TableCell>{s.applications}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
+          </Card>
+        </TabsContent>
+
+        {/* ── Analytics ── */}
+        <TabsContent value="analytics" className="space-y-6">
+          <div className="grid lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-sans flex items-center gap-2">
+                  <MapPin className="h-5 w-5 text-primary" /> Location Demand Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={locationDemand.map(d => ({ state: d.state, course: d.courseDemand, product: d.productDemand, mentorship: d.mentorshipDemand }))} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(30,15%,88%)" />
+                    <XAxis type="number" tick={{ fontSize: 11 }} />
+                    <YAxis dataKey="state" type="category" tick={{ fontSize: 9 }} width={110} />
+                    <Tooltip />
+                    <Bar dataKey="course" fill="hsl(24,85%,48%)" radius={[0, 2, 2, 0]} name="Courses" stackId="a" />
+                    <Bar dataKey="product" fill="hsl(158,45%,42%)" radius={[0, 2, 2, 0]} name="Products" stackId="a" />
+                    <Bar dataKey="mentorship" fill="hsl(35,60%,52%)" radius={[0, 4, 4, 0]} name="Mentorship" stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-sans flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-accent" /> State Drill-Down
+                  </CardTitle>
+                  <Select value={analyticsState} onValueChange={setAnalyticsState}>
+                    <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      {INDIAN_STATES.filter(s => [
+                        "Tamil Nadu", "Maharashtra", "Rajasthan", "Gujarat", "Kerala",
+                        "Karnataka", "Uttar Pradesh", "West Bengal", "Delhi", "Bihar",
+                      ].includes(s)).map(s => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={skillDemand}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(30,15%,88%)" />
+                    <XAxis dataKey="skill" tick={{ fontSize: 9 }} angle={-20} textAnchor="end" height={60} />
+                    <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} />
+                    <Tooltip />
+                    <Bar dataKey="score" fill="hsl(24,85%,48%)" radius={[4, 4, 0, 0]} name="Demand Score" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Demand Insight Cards */}
+          <Card>
+            <CardHeader><CardTitle className="text-lg font-sans">📍 Demand Insights by Location</CardTitle></CardHeader>
+            <CardContent>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {locationDemand.slice(0, 6).map(d => (
+                  <div key={d.state} className="p-4 rounded-lg border hover:shadow-sm transition-shadow">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      <span className="font-medium text-sm">{d.state}</span>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs"><span className="text-muted-foreground">High demand:</span> {d.topSkills[0]}</p>
+                      <p className="text-xs"><span className="text-muted-foreground">Trending:</span> {d.topBusinessTypes[0]}</p>
+                      <p className="text-xs"><span className="text-muted-foreground">Top course:</span> {d.trendingCourses[0]}</p>
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary">📚 {d.courseDemand}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent">🛒 {d.productDemand}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-warm/10 text-warm">🧑‍🏫 {d.mentorshipDemand}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>

@@ -7,6 +7,7 @@ import { NavLink } from "@/components/NavLink";
 import {
   LayoutDashboard, GraduationCap, Landmark, ShoppingBag, CalendarDays,
   BadgeCheck, Users, Bot, MessageSquare, Bell, FileText, Trophy, LogOut, Shield, UserCircle,
+  Package, BarChart3, Inbox,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import AIChatWidget from "@/components/AIChatWidget";
@@ -56,15 +57,49 @@ function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              {hasRole("admin") && (
+
+              {/* ── Role-specific items ── */}
+              {hasRole("mentor") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
-                    <NavLink to="/dashboard/admin" className="hover:bg-muted/50" activeClassName="bg-primary/10 text-primary font-medium">
-                      <Shield className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>Admin Panel</span>}
+                    <NavLink to="/dashboard/mentor-requests" className="hover:bg-muted/50" activeClassName="bg-primary/10 text-primary font-medium">
+                      <Inbox className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>Mentee Requests</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+              )}
+
+              {hasRole("seller") && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink to="/dashboard/seller-products" className="hover:bg-muted/50" activeClassName="bg-primary/10 text-primary font-medium">
+                      <Package className="mr-2 h-4 w-4" />
+                      {!collapsed && <span>My Products</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {hasRole("admin") && (
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <NavLink to="/dashboard/admin" className="hover:bg-muted/50" activeClassName="bg-primary/10 text-primary font-medium">
+                        <Shield className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>Admin Panel</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <NavLink to="/dashboard/demand-analytics" className="hover:bg-muted/50" activeClassName="bg-primary/10 text-primary font-medium">
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>Demand Analytics</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
               )}
             </SidebarMenu>
           </SidebarGroupContent>
