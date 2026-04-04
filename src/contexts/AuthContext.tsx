@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(prev => prev ? { ...prev, first_login: false } : prev);
   };
 
-  const updateProfile = async (data: Partial<Pick<Profile, "full_name" | "location" | "interest">>) => {
+  const updateProfile = async (data: Partial<Profile>) => {
     if (!user) return;
     const updateData: Record<string, unknown> = {};
     if (data.full_name !== undefined) updateData.full_name = data.full_name;
