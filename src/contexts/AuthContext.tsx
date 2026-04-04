@@ -9,6 +9,8 @@ interface Profile {
   full_name: string | null;
   location: string | null;
   interest: string | null;
+  state: string | null;
+  city: string | null;
   first_login: boolean;
 }
 
