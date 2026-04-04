@@ -8,11 +8,201 @@ export type Json =
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
+      courses: {
+        Row: {
+          category: string
+          city: string | null
+          created_at: string
+          description: string | null
+          duration: string | null
+          enrolled_count: number
+          id: string
+          instructor: string | null
+          is_active: boolean
+          level: string | null
+          state: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          enrolled_count?: number
+          id?: string
+          instructor?: string | null
+          is_active?: boolean
+          level?: string | null
+          state?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          duration?: string | null
+          enrolled_count?: number
+          id?: string
+          instructor?: string | null
+          is_active?: boolean
+          level?: string | null
+          state?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mentor_requests: {
+        Row: {
+          created_at: string
+          id: string
+          mentee_id: string
+          mentor_id: string
+          message: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mentee_id: string
+          mentor_id: string
+          message?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mentee_id?: string
+          mentor_id?: string
+          message?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      mentor_sessions: {
+        Row: {
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          mentee_id: string
+          mentor_id: string
+          notes: string | null
+          scheduled_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          mentee_id: string
+          mentor_id: string
+          notes?: string | null
+          scheduled_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          mentee_id?: string
+          mentor_id?: string
+          notes?: string | null
+          scheduled_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string | null
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          title: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string | null
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: string
+          city: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          seller_id: string
+          state: string | null
+          status: string
+          updated_at: string
+          views_count: number
+        }
+        Insert: {
+          category?: string
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price?: number
+          seller_id: string
+          state?: string | null
+          status?: string
+          updated_at?: string
+          views_count?: number
+        }
+        Update: {
+          category?: string
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          seller_id?: string
+          state?: string | null
+          status?: string
+          updated_at?: string
+          views_count?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -20,9 +210,6 @@ export type Database = {
           id: string
           interest: string | null
           location: string | null
-          state: string | null
-          city: string | null
-          first_login: boolean
           updated_at: string
           user_id: string
         }
@@ -32,9 +219,6 @@ export type Database = {
           id?: string
           interest?: string | null
           location?: string | null
-          state?: string | null
-          city?: string | null
-          first_login?: boolean
           updated_at?: string
           user_id: string
         }
@@ -44,11 +228,71 @@ export type Database = {
           id?: string
           interest?: string | null
           location?: string | null
-          state?: string | null
-          city?: string | null
-          first_login?: boolean
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      questionnaire_responses: {
+        Row: {
+          created_at: string
+          id: string
+          responses: Json
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          responses?: Json
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          responses?: Json
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      schemes: {
+        Row: {
+          benefits: string | null
+          category: string
+          created_at: string
+          description: string | null
+          eligibility: string | null
+          id: string
+          is_active: boolean
+          state: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          benefits?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          eligibility?: string | null
+          id?: string
+          is_active?: boolean
+          state?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          benefits?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          eligibility?: string | null
+          id?: string
+          is_active?: boolean
+          state?: string | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -67,93 +311,6 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
-        }
-        Relationships: []
-      }
-      questionnaire_responses: {
-        Row: {
-          id: string
-          user_id: string
-          answers: Json
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          answers: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          answers?: Json
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      certificates: {
-        Row: {
-          id: string
-          user_id: string
-          certificate_id: string
-          holder_name: string | null
-          provider: string | null
-          status: string
-          verified_at: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          certificate_id: string
-          holder_name?: string | null
-          provider?: string | null
-          status?: string
-          verified_at?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          certificate_id?: string
-          holder_name?: string | null
-          provider?: string | null
-          status?: string
-          verified_at?: string | null
-          created_at?: string
-        }
-        Relationships: []
-      }
-      notifications: {
-        Row: {
-          id: string
-          user_id: string
-          title: string
-          description: string | null
-          type: string
-          read: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          title: string
-          description?: string | null
-          type?: string
-          read?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          title?: string
-          description?: string | null
-          type?: string
-          read?: boolean
-          created_at?: string
         }
         Relationships: []
       }
