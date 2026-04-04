@@ -25,7 +25,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   completeQuestionnaire: (answers: QuestionnaireAnswers) => Promise<void>;
-  updateProfile: (data: Partial<Pick<Profile, "full_name" | "location" | "interest">>) => Promise<void>;
+  updateProfile: (data: Partial<Profile>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
