@@ -6,58 +6,68 @@
 
 @layer base {
   :root {
-    --background: 270 20% 98%;
-    --foreground: 240 20% 12%;
+    /* Royal Shakti — Off-white #FFF9F7 */
+    --background: 14 100% 99%;
+    --foreground: 290 30% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 240 20% 12%;
+    --card-foreground: 290 30% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 240 20% 12%;
+    --popover-foreground: 290 30% 12%;
 
-    --primary: 262 72% 56%;
-    --primary-foreground: 0 0% 100%;
+    /* Deep Purple #6A1B9A */
+    --primary: 282 70% 35%;
+    --primary-foreground: 14 100% 99%;
 
-    --secondary: 280 30% 95%;
-    --secondary-foreground: 240 20% 12%;
+    /* Soft Peach #FADBD8 */
+    --secondary: 6 73% 91%;
+    --secondary-foreground: 333 60% 22%;
 
-    --muted: 270 15% 94%;
-    --muted-foreground: 240 8% 46%;
+    --muted: 14 50% 95%;
+    --muted-foreground: 290 12% 42%;
 
-    --accent: 172 50% 45%;
-    --accent-foreground: 0 0% 100%;
+    /* Gold #D4AF37 */
+    --accent: 46 65% 52%;
+    --accent-foreground: 290 40% 15%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 72% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 270 12% 90%;
-    --input: 270 12% 90%;
-    --ring: 262 72% 56%;
+    --border: 333 30% 88%;
+    --input: 333 30% 88%;
+    --ring: 282 70% 35%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    --sidebar-background: 270 18% 97%;
-    --sidebar-foreground: 240 20% 12%;
-    --sidebar-primary: 262 72% 56%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 270 20% 93%;
-    --sidebar-accent-foreground: 240 20% 12%;
-    --sidebar-border: 270 12% 90%;
-    --sidebar-ring: 262 72% 56%;
+    --sidebar-background: 14 80% 98%;
+    --sidebar-foreground: 290 30% 12%;
+    --sidebar-primary: 282 70% 35%;
+    --sidebar-primary-foreground: 14 100% 99%;
+    --sidebar-accent: 6 73% 94%;
+    --sidebar-accent-foreground: 333 60% 22%;
+    --sidebar-border: 333 30% 88%;
+    --sidebar-ring: 282 70% 35%;
 
-    /* Custom tokens */
-    --warm: 28 80% 58%;
-    --warm-foreground: 0 0% 100%;
-    --success: 158 55% 42%;
+    /* Custom tokens — Plum/Wine #8E244D + Blush Pink #F5B7B1 + Gold */
+    --warm: 46 65% 52%;
+    --warm-foreground: 290 40% 15%;
+    --success: 158 55% 38%;
     --success-foreground: 0 0% 100%;
-    --hero-gradient-from: 262 72% 56%;
-    --hero-gradient-via: 290 60% 58%;
-    --hero-gradient-to: 330 70% 60%;
+    --plum: 333 60% 35%;
+    --plum-foreground: 14 100% 99%;
+    --blush: 6 78% 83%;
+    --gold: 46 65% 52%;
+
+    /* Hero gradient: Deep Purple → Plum → Blush Pink */
+    --hero-gradient-from: 282 70% 35%;
+    --hero-gradient-via: 333 60% 42%;
+    --hero-gradient-to: 6 78% 83%;
 
     /* Glassmorphism */
-    --glass-bg: 0 0% 100% / 0.6;
-    --glass-border: 0 0% 100% / 0.3;
-    --glass-shadow: 262 72% 56% / 0.08;
+    --glass-bg: 0 0% 100% / 0.65;
+    --glass-border: 46 65% 52% / 0.25;
+    --glass-shadow: 282 70% 35% / 0.12;
   }
 
   .dark {
