@@ -5,6 +5,7 @@ import { GraduationCap, Landmark, ShoppingBag, TrendingUp, Bot, CalendarDays, Us
 import { Link } from "react-router-dom";
 import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useAuth } from "@/contexts/AuthContext";
+import { RecommendedForYou } from "@/components/dashboard/RecommendedForYou";
 
 const anim = (i: number) => ({
   initial: { opacity: 0, y: 16, filter: "blur(4px)" } as const,
@@ -204,45 +205,9 @@ export default function UserDashboard({ name }: Props) {
         </Card>
       </motion.div>
 
-      {/* AI Recommendations */}
+      {/* AI Recommendations - real, personalized */}
       <motion.div {...anim(9)}>
-        <Card>
-          <CardHeader><CardTitle className="text-lg font-sans flex items-center gap-2"><Bot className="h-5 w-5 text-primary" /> Recommended For You</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid sm:grid-cols-3 gap-3">
-              {/* Courses */}
-              <div>
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1"><GraduationCap className="h-3 w-3" />Courses</h4>
-                {recommended.courses.map(r => (
-                  <Link key={r.title} to="/dashboard/courses" className="block p-3 rounded-lg border hover:bg-muted/50 transition-colors mb-2">
-                    <p className="font-medium text-sm">{r.title}</p>
-                    <p className="text-xs text-muted-foreground">{r.desc}</p>
-                  </Link>
-                ))}
-              </div>
-              {/* Mentors */}
-              <div>
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1"><Users className="h-3 w-3" />Mentors</h4>
-                {recommended.mentors.map(r => (
-                  <Link key={r.title} to="/dashboard/mentorship" className="block p-3 rounded-lg border hover:bg-muted/50 transition-colors mb-2">
-                    <p className="font-medium text-sm">{r.title}</p>
-                    <p className="text-xs text-muted-foreground">{r.desc}</p>
-                  </Link>
-                ))}
-              </div>
-              {/* Schemes */}
-              <div>
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1"><Landmark className="h-3 w-3" />Schemes</h4>
-                {recommended.schemes.map(r => (
-                  <Link key={r.title} to="/dashboard/schemes" className="block p-3 rounded-lg border hover:bg-muted/50 transition-colors mb-2">
-                    <p className="font-medium text-sm">{r.title}</p>
-                    <p className="text-xs text-muted-foreground">{r.desc}</p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <RecommendedForYou />
       </motion.div>
 
       {/* Upcoming Events */}
