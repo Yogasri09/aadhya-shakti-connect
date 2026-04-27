@@ -37,11 +37,11 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: claims, error: authErr } = await supabase.auth.getClaims(
+    const { data: userData, error: authErr } = await supabase.auth.getUser(
       authHeader.replace("Bearer ", "")
     );
-    if (authErr || !claims?.claims) return json({ error: "Unauthorized" }, 401);
-    const userId = claims.claims.sub;
+    if (authErr || !userData?.user) return json({ error: "Unauthorized" }, 401);
+    const userId = userData.user.id;
 
     // Load profile + questionnaire
     const [{ data: profile }, { data: qResp }] = await Promise.all([
