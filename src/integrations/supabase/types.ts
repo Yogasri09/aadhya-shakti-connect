@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          duration_minutes: number
+          id: string
+          notes: string | null
+          phone: string
+          scheduled_at: string
+          seller_id: string
+          service_id: string
+          status: string
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          notes?: string | null
+          phone: string
+          scheduled_at: string
+          seller_id: string
+          service_id: string
+          status?: string
+          total_price?: number
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          notes?: string | null
+          phone?: string
+          scheduled_at?: string
+          seller_id?: string
+          service_id?: string
+          status?: string
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       communities: {
         Row: {
           created_at: string
@@ -314,6 +359,36 @@ export type Database = {
           },
         ]
       }
+      conversations: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          id: string
+          last_message_at: string
+          product_id: string | null
+          seller_id: string
+          service_id: string | null
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          product_id?: string | null
+          seller_id: string
+          service_id?: string | null
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          product_id?: string | null
+          seller_id?: string
+          service_id?: string | null
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           category: string
@@ -425,6 +500,33 @@ export type Database = {
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_read: boolean
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          sender_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -516,11 +618,13 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          images: string[] | null
           name: string
           price: number
           seller_id: string
           state: string | null
           status: string
+          stock: number
           updated_at: string
           views_count: number
         }
@@ -531,11 +635,13 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          images?: string[] | null
           name: string
           price?: number
           seller_id: string
           state?: string | null
           status?: string
+          stock?: number
           updated_at?: string
           views_count?: number
         }
@@ -546,11 +652,13 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          images?: string[] | null
           name?: string
           price?: number
           seller_id?: string
           state?: string | null
           status?: string
+          stock?: number
           updated_at?: string
           views_count?: number
         }
@@ -610,6 +718,51 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          body: string | null
+          booking_id: string | null
+          created_at: string
+          id: string
+          is_reported: boolean
+          order_id: string | null
+          rating: number
+          target_id: string
+          target_type: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          is_reported?: boolean
+          order_id?: string | null
+          rating: number
+          target_id: string
+          target_type: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          is_reported?: boolean
+          order_id?: string | null
+          rating?: number
+          target_id?: string
+          target_type?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       schemes: {
         Row: {
           benefits: string | null
@@ -646,6 +799,63 @@ export type Database = {
           state?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          availability: string | null
+          category: string
+          city: string | null
+          created_at: string
+          description: string | null
+          experience_level: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          price: number
+          pricing_type: string
+          seller_id: string
+          state: string | null
+          title: string
+          updated_at: string
+          views_count: number
+        }
+        Insert: {
+          availability?: string | null
+          category?: string
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          experience_level?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          price?: number
+          pricing_type?: string
+          seller_id: string
+          state?: string | null
+          title: string
+          updated_at?: string
+          views_count?: number
+        }
+        Update: {
+          availability?: string | null
+          category?: string
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          experience_level?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          price?: number
+          pricing_type?: string
+          seller_id?: string
+          state?: string | null
+          title?: string
+          updated_at?: string
+          views_count?: number
         }
         Relationships: []
       }
@@ -688,6 +898,30 @@ export type Database = {
         }
         Relationships: []
       }
+      wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          target_id: string
+          target_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          target_id: string
+          target_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          target_id?: string
+          target_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -698,6 +932,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_conversation_participant: {
+        Args: { _conv_id: string; _user_id: string }
         Returns: boolean
       }
     }
