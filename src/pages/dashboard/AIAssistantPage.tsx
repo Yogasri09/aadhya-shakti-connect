@@ -61,7 +61,7 @@ export default function AIAssistantPage() {
 
   const send = (text: string) => {
     if (!text.trim()) return;
-    const userMsg: Message = { role: "user", content: text.trim() };
+    const userMsg: AssistantMessage = { role: "user", content: text.trim() };
     setMessages(prev => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
