@@ -1,0 +1,9 @@
+# Aadhya
+
+> AI-powered women empowerment platform connecting women to government training, skill development, business opportunities, marketplace, mentorship, and financial guidance.
+
+## Pages
+
+- [Home](/): Overview of Aadhya — features, stories, schemes, and how it works.
+- [Sign Up](/signup): Create an account to access training, schemes, and marketplace.
+- [Log In](/login): Sign in to your Aadhya account.

@@ -58,6 +58,10 @@ export function HeroSection() {
           <img
             src={heroImg}
             alt="Women entrepreneurs collaborating, sewing, and selling products"
+            width={1024}
+            height={1024}
+            fetchPriority="high"
+            decoding="async"
             className="w-full max-w-lg animate-float"
           />
         </motion.div>

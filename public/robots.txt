@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://aadhya-shakti-connect.lovable.app/sitemap.xml
